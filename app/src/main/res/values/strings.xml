@@ -1,0 +1,92 @@
+<resources>
+    <string name="app_name">UP</string>
+    <string name="facebook_app_id">118909275256904</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="gender">Gender</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="hintabout">Let\'s say something about Yourself</string>
+    <string name="update">Update</string>
+    <string name="ownerid">id</string>
+    <string name="phone">Phone</string>
+    <string name="accept">Accept</string>
+    <string name="reject">Reject</string>
+    <string name="search">Search</string>
+    <string name="friend_request">Friend Request</string>
+    <string-array name="year">
+        <item>Academic Year</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+    <string-array name="courses">
+        <item>Your Course</item>
+        <item>A-level</item>
+        <item>Accounting</item>
+        <item>Applied Science</item>
+        <item>Aquaculture</item>
+        <item>Architecture</item>
+        <item>Banking Finance</item>
+        <item>Business Administration</item>
+        <item>Enterpreneruship</item>
+        <item>Human Resources</item>
+        <item>Marketing</item>
+        <item>Software Engineering</item>
+    </string-array>
+    <string-array name="food">
+        <item>Favourite Food Style</item>
+        <item>Chinese</item>
+        <item>Indian</item>
+        <item>Korean</item>
+        <item>Japanese</item>
+        <item>Thai</item>
+        <item>Western</item>
+    </string-array>
+    <string-array name="songs">
+        <item>Song Type</item>
+        <item>Blues</item>
+        <item>Country</item>
+        <item>Classical</item>
+        <item>Hiphop</item>
+        <item>K-pop</item>
+        <item>Jazz</item>
+    </string-array>
+    <string-array name="sports">
+        <item>Favourite Sport</item>
+        <item>Badminton</item>
+        <item>Basketball</item>
+        <item>CaptainBall</item>
+        <item>Dance</item>
+        <item>Swimming</item>
+        <item>Tennis</item>
+    </string-array>
+    <string-array name="friend_names">
+        <item>Aaron</item>
+        <item>Bernis</item>
+        <item>Carrot</item>
+        <item>Demon</item>
+        <item>Eling</item>
+    </string-array>
+    <string-array name="profile_pic">
+        <item>@mipmap/ic_launcher</item>
+        <item>@mipmap/ic_launcher</item>
+        <item>@mipmap/ic_launcher</item>
+        <item>@mipmap/ic_launcher</item>
+        <item>@mipmap/ic_launcher</item>
+    </string-array>
+    <string-array name="lastmessage">
+        <item>Blogging</item>
+        <item>Available</item>
+        <item>Busy</item>
+        <item>Mobile</item>
+        <item>Mobile</item>
+    </string-array>
+    <string-array name="contact">
+        <item>Mobile</item>
+        <item>Mobile</item>
+        <item>Mobile</item>
+        <item>Mobile</item>
+        <item>Mobile</item>
+    </string-array>
+</resources>
