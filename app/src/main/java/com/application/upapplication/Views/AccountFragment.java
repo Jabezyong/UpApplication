@@ -58,8 +58,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.HashMap;
 
+import cn.smssdk.EventHandler;
 import cn.smssdk.SMSSDK;
+import cn.smssdk.gui.RegisterPage;
 
 
 /**
@@ -410,24 +413,24 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
 
     private void verifySms() {
         SMSSDK.initSDK(getContext(), APPKEY, APPSECRET);
-        phone = "0163582906";
+//        phone = "0163582906";
 
-//        final RegisterPage registerPage = new RegisterPage();
-//        registerPage.setRegisterCallback(new EventHandler() {
-//            public void afterEvent(int event, int result, Object data) {
-//                if (result == SMSSDK.RESULT_COMPLETE) {
-//                    HashMap<String, Object> phoneMap = (HashMap<String, Object>) data;
-//                    String country = (String) phoneMap.get("country");
-//                    phone = "0"+ (String) phoneMap.get("phone");
-//                    Toast.makeText(getContext(), phone, Toast.LENGTH_LONG).show();
-//                    verified = 1;
-//                    saving();
-//                }else if(result == SMSSDK.RESULT_ERROR){
-//                    phone = "0163582906";
-//                }
-//            }
-//        });
-//        registerPage.show(getContext());
+        final RegisterPage registerPage = new RegisterPage();
+        registerPage.setRegisterCallback(new EventHandler() {
+            public void afterEvent(int event, int result, Object data) {
+                if (result == SMSSDK.RESULT_COMPLETE) {
+                    HashMap<String, Object> phoneMap = (HashMap<String, Object>) data;
+                    String country = (String) phoneMap.get("country");
+                    phone = "0"+ (String) phoneMap.get("phone");
+                    Toast.makeText(getContext(), phone, Toast.LENGTH_LONG).show();
+                    verified = 1;
+                    saving();
+                }else if(result == SMSSDK.RESULT_ERROR){
+                    phone = "0163582906";
+                }
+            }
+        });
+        registerPage.show(getContext());
 
     }
 
