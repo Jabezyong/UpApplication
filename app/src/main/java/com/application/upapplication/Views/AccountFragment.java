@@ -399,9 +399,8 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
             saveToFireBase();
             uploadProfilePhoto();
             Toast.makeText(getContext(),"Saved to firebase",Toast.LENGTH_LONG).show();
-        }else{
-           startNewActivity();
         }
+        startNewActivity();
 
     }
     private void startNewActivity(){
