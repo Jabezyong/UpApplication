@@ -62,6 +62,8 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
         public static final String SENDER_COLUMN ="sender";
         public static final String RECEIVER_COLUMN="receiver";
         public static final String TEXT_COLUMN ="text";
+        public static final String CONTENT_COLUMN ="content";
+        public static final String CONTENT_TYPE_COLUMN ="contenttype";
         public static final String TIMESTAMP_COLUMN ="time";
         public static final String VOICE_COLUMN = " voice";
         public static final String IMAGE_COLUMN = " image";
@@ -124,9 +126,8 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
                 CHATROOM_ID_COLUMN + " TEXT NOT NULL, " +
                 SENDER_COLUMN + "  TEXT NOT NULL, " +
                 RECEIVER_COLUMN + " TEXT NOT NULL, " +
-                TEXT_COLUMN + " TEXT , " +
-                VOICE_COLUMN + " TEXT, " +
-                IMAGE_COLUMN + " TEXT," +
+                CONTENT_COLUMN + " TEXT, "+
+                CONTENT_TYPE_COLUMN + " INTEGER,"+
                 TIMESTAMP_COLUMN + " TEXT NOT NULL, " +
                 SEEN_COLUMN  + " INTEGER, "+
                 "FOREIGN KEY ("+SENDER_COLUMN+") REFERENCES "+

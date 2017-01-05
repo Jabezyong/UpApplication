@@ -1,12 +1,16 @@
 package com.application.upapplication.Views;
 
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -14,14 +18,30 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.application.upapplication.Controller.FriendListAdapter;
+import com.application.upapplication.Controller.RequestFriendListAdapter;
 import com.application.upapplication.Database.UpDatabaseHelper;
 import com.application.upapplication.Model.FriendListItem;
+import com.application.upapplication.Model.RequestFriendItem;
+import com.application.upapplication.Model.SuccessFriendRequest;
+import com.application.upapplication.Model.UserDetails;
 import com.application.upapplication.R;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.R.attr.bitmap;
 
 
 /**
@@ -35,6 +55,7 @@ public class FriendsFragment extends Fragment {
     List<FriendListItem> friendListItems;
     UpDatabaseHelper databaseHelper;
     View view;
+    String ownerId;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -49,7 +70,8 @@ public class FriendsFragment extends Fragment {
     }
 
     private void init(){
-
+        SharedPreferences preferences = getContext().getSharedPreferences(MainActivity.UPPREFERENCE, Context.MODE_PRIVATE);
+        ownerId = preferences.getString(getString(R.string.ownerid),"");
         relativeLayout = (RelativeLayout) view.findViewById(R.id.requestfriendlist);
         listView = (ListView) view.findViewById(R.id.listViewFriends);
         relativeLayout.setOnClickListener(new View.OnClickListener() {
@@ -84,24 +106,121 @@ public class FriendsFragment extends Fragment {
 
         if(friendCursor.getCount() >0){
             new myTask().execute(friendCursor);
+        }else{
+            readFromFirebase();
         }
 //        friendListAdapter.notifyDataSetChanged();
     }
 
+    private void readFromFirebase() {
+
+        final DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child(RequestFriendListAdapter.FRIENDLIST).child(ownerId);
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                SuccessFriendRequest request = dataSnapshot.getValue(SuccessFriendRequest.class);
+                final String friendId = request.getFriendId();
+                final String roomId = request.getRoomId();
+                FirebaseDatabase.getInstance().getReference().child("Users").child(friendId)
+                        .addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                UserDetails userDetails = dataSnapshot.getValue(UserDetails.class);
+                                executeQuery(userDetails,roomId);
+                                downloadBitmap(userDetails);
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
+    private void downloadBitmap(final UserDetails userDetails) {
+        StorageReference filepath = FirebaseStorage.getInstance().getReference().child("UserPhotos").child(userDetails.getId() + ".png");
+        String photo = filepath.getDownloadUrl().toString();
+        int ONE_MEGABYTE = 1024*1024;
+        filepath.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                Bitmap bitmap = AccountFragment.getImage(bytes);
+                saveImageToDatabase(userDetails,bitmap);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getContext(),"Cant download profile photo",Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void executeQuery(UserDetails user,String roomId) {
+        ContentValues values = new ContentValues();
+        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        values.put(UpDatabaseHelper.ID_COLUMN,user.getId());
+        values.put(UpDatabaseHelper.FIRST_NAME_COLUMN,user.getFirstName());
+        values.put(UpDatabaseHelper.LAST_NAME_COLUMN,user.getLastName());
+        values.put(UpDatabaseHelper.GENDER_COLUMN,user.getGender());
+        values.put(UpDatabaseHelper.FACEBOOK_ID_COLUMN,user.getId());
+        values.put(UpDatabaseHelper.PROFILE_PHOTO_COLUMN,user.getPhoto());
+        values.put(UpDatabaseHelper.COURSE_COLUMN,user.getCourse());
+        values.put(UpDatabaseHelper.ACADEMIC_YEAR_COLUMN,user.getAcademicYear());
+        values.put(UpDatabaseHelper.ABOUT_ME_COLUMN,user.getAboutMe());
+        values.put(UpDatabaseHelper.DOB_COLUMN,user.getBirthday());
+        values.put(UpDatabaseHelper.PHONE_COLUMN,user.getPhoneNumber());
+        values.put(UpDatabaseHelper.VERIFIED_COLUMN,user.getIsVerified());
+        values.put(UpDatabaseHelper.AGE_COLUMN,user.getAge());
+        values.put(UpDatabaseHelper.INTEREST_1_COLUMN,user.getInterest1());
+        values.put(UpDatabaseHelper.INTEREST_2_COLUMN,user.getInterest2());
+        values.put(UpDatabaseHelper.INTEREST_3_COLUMN,user.getInterest3());
+        values.put(UpDatabaseHelper.TARGET_MALE_COLUMN,user.getTargetMale());
+        values.put(UpDatabaseHelper.TARGET_FEMALE_COLUMN,user.getTargetFemale());
+        values.put(UpDatabaseHelper.LAST_LOGIN_COLUMN,user.getLastLogin().toString());
+        db.insert(UpDatabaseHelper.USER_TABLE,null,values);
+
+        ContentValues newValues = new ContentValues();
+        newValues.put(UpDatabaseHelper.FRIEND_ID_COLUMN,user.getId());
+        newValues.put(UpDatabaseHelper.FIRST_NAME_COLUMN,user.getFirstName());
+        newValues.put(UpDatabaseHelper.LAST_NAME_COLUMN,user.getLastName());
+        newValues.put(UpDatabaseHelper.CHATROOM_ID_COLUMN,roomId);
+        db.insert(UpDatabaseHelper.FRIENDSHIP_TABLE,null,newValues);
+        db.close();
+    }
+    private void saveImageToDatabase(UserDetails user,Bitmap bitmap){
+        ContentValues values = new ContentValues();
+        values.put(UpDatabaseHelper.IMAGES_ID_COLUMN,user.getId());
+        values.put(UpDatabaseHelper.IMAGE_COLUMN, AccountFragment.getBytes(bitmap));
+        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        db.insert(UpDatabaseHelper.IMAGES_TABLE,null,values);
+        db.close();
+    }
     private class myTask extends AsyncTask<Cursor,Void,Void>{
 
         @Override
         protected Void doInBackground(Cursor... params) {
             Cursor friendCursor = params[0];
             friendCursor.moveToFirst();
-            while(!friendCursor.isLast()){
+            for(int i=0;i<friendCursor.getCount();i++){
+
                 String id = friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.FRIEND_ID_COLUMN));
                 String firstName = friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.FIRST_NAME_COLUMN));
                 String lastName =  friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.LAST_NAME_COLUMN));
                 String fullName = firstName +" "+lastName;
                 String roomId = friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.CHATROOM_ID_COLUMN));
                 Bitmap bitmap = getImage(databaseHelper.getProfilePic(id));
-                FriendListItem item = new FriendListItem(fullName,roomId,bitmap);
+                FriendListItem item = new FriendListItem(fullName,id,bitmap);
+                item.setRoomId(roomId);
                 friendListItems.add(item);
                 friendCursor.moveToNext();
             }
@@ -110,7 +229,7 @@ public class FriendsFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-//            friendListAdapter.notifyDataSetChanged();
+            friendListAdapter.notifyDataSetChanged();
             listView.setAdapter(friendListAdapter);
         }
     }

@@ -20,6 +20,7 @@ public class UserDetails {
     private String interest1;
     private String interest2;
     private String interest3;
+    private String school= "TARUC";
     private int isVerified;
     private int targetMale;
     private int targetFemale;

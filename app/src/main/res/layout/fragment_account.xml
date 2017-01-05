@@ -20,7 +20,7 @@
                 android:scaleType="centerCrop"
                 android:layout_width="fill_parent"
                 android:layout_height="300dp"
-                app:srcCompat="@mipmap/ic_yoona"
+                app:srcCompat="@drawable/default_profile_pic"
                 android:layout_gravity="center_horizontal"
                 android:id="@+id/imageViewProfilePicture"
                 />

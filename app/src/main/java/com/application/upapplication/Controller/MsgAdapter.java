@@ -41,11 +41,11 @@ public class    MsgAdapter extends ArrayAdapter<Message>{
             view = convertView;
             viewHolder = (ViewHolder) view.getTag();
         }
-        if(msg.getType() == Message.TYPE_RECEIVED){
+        if(msg.getDeliverType() == Message.TYPE_RECEIVED){
             viewHolder.leftLayout.setVisibility(View.VISIBLE);
             viewHolder.rightLayout.setVisibility(View.GONE);
             viewHolder.leftMsg.setText(msg.getContent());
-        }else if(msg.getType() == Message.TYPE_SEND){
+        }else if(msg.getDeliverType() == Message.TYPE_SEND){
             viewHolder.leftLayout.setVisibility(View.GONE);
             viewHolder.rightLayout.setVisibility(View.VISIBLE);
             viewHolder.rightMsg.setText(msg.getContent());

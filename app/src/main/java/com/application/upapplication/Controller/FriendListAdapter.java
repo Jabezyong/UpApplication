@@ -2,6 +2,8 @@ package com.application.upapplication.Controller;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +15,7 @@ import android.widget.TextView;
 
 import com.application.upapplication.Model.FriendListItem;
 import com.application.upapplication.R;
+import com.application.upapplication.Views.ChatActivity;
 import com.google.firebase.storage.FirebaseStorage;
 
 import java.util.List;
@@ -24,6 +27,7 @@ import java.util.List;
 public class FriendListAdapter extends BaseAdapter {
     private Context mContext;
     List<FriendListItem> friends;
+    FriendListItem item;
     FirebaseStorage firebase;
     public FriendListAdapter(Context mContext, List<FriendListItem> friends) {
         this.mContext = mContext;
@@ -60,9 +64,20 @@ public class FriendListAdapter extends BaseAdapter {
         }else{
             viewHolder = (ViewHolder) convertView.getTag();
         }
-        FriendListItem item =  friends.get(position);
+        item =  friends.get(position);
         viewHolder.tvFriend_name.setText(item.getFriend_name());
         viewHolder.ivProfile_pic.setImageBitmap(item.getBitmap());
+        viewHolder.btnChat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(mContext, ChatActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString(ChatActivity.CHATROOMID,item.getRoomId());
+                bundle.putString(ChatActivity.FRIENDID,item.getProfile_id());
+                intent.putExtra(ChatActivity.BUNDLE,bundle);
+                mContext.startActivity(intent);
+            }
+        });
         return convertView;
     }
 

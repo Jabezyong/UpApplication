@@ -1,5 +1,7 @@
 package com.application.upapplication.Model;
 
+import java.util.Date;
+
 /**
  * Created by user on 11/25/2016.
  */
@@ -7,34 +9,46 @@ package com.application.upapplication.Model;
 public class Message {
     public static final int TYPE_RECEIVED = 0;
     public static final int TYPE_SEND = 1;
-    public static final String TEXT = "TEXT";
-    public static final String AUDIO = "AUDIO";
-    public static final String IMAGE = "IMAGE";
+    public static final int TEXT = 0;
+    public static final int AUDIO = 1;
+    public static final int IMAGE =  2;
+    private String messageId;
     private String sender;
     private String receiver;
     private String content;
     private String file;
-    private String contentType;
-    private int type;
-    private int date;
+    private int contentType;
+    private int deliverType;
+    private Date date;
     private int seen;
 
-    public Message(String content, int type){
+    public Message(String messageId,String sender ,String receiver,String content, int contentType){
+        this.messageId = messageId;
+        this.sender = sender;
+        this.receiver = receiver;
         this.content = content;
-        this.type = type;
-    }
-    public Message(String content){
-        this.content = content;
-        this.type = TYPE_SEND;
+        this.contentType = contentType;
+        this.date = new Date();
     }
 
-    public Message(String sender, String receiver, String content,String contentType, int type, int date, int seen) {
+    public Message(String sender ,String receiver,String content, int contentType){
+        this.sender = sender;
+        this.receiver = receiver;
+        this.content = content;
+        this.contentType = contentType;
+        this.date = new Date();
+    }
+    public Message(String content,int deliverType){
+        this.content = content;
+        this.deliverType = deliverType;
+    }
+
+    public Message(String sender, String receiver, String content,int contentType, int deliverType, int seen) {
         this.sender = sender;
         this.receiver = receiver;
         this.content = content;
         this.contentType =contentType;
-        this.type = type;
-        this.date = date;
+        this.deliverType = deliverType;
         this.seen = seen;
     }
 
@@ -70,11 +84,11 @@ public class Message {
         this.content = content;
     }
 
-    public String getContentType() {
+    public int getContentType() {
         return contentType;
     }
 
-    public void setContentType(String contentType) {
+    public void setContentType(int contentType) {
         this.contentType = contentType;
     }
 
@@ -86,19 +100,19 @@ public class Message {
         this.file = file;
     }
 
-    public int getType() {
-        return type;
+    public int getDeliverType() {
+        return deliverType;
     }
 
-    public void setType(int type) {
-        this.type = type;
+    public void setDeliverType(int deliverType) {
+        this.deliverType = deliverType;
     }
 
-    public int getDate() {
+    public Date getDate() {
         return date;
     }
 
-    public void setDate(int date) {
+    public void setDate(Date date) {
         this.date = date;
     }
 

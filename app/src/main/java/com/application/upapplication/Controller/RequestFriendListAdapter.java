@@ -41,11 +41,11 @@ import java.util.UUID;
 public class RequestFriendListAdapter extends BaseAdapter{
     Context mContext;
     List<FriendListItem> friendListItems;
-    static String newFriend = "New Friends";
-    static String friendList = "Friend List";
-    static String friendRequest ="Friend Request";
-    static String chatRoomList ="ChatRoomList";
-    static String messages = "Messages";
+    public static String NEWFRIEND = "New Friends";
+    public static String FRIENDLIST = "Friend List";
+    public static String FRIENDREQUEST ="Friend Request";
+    public static String CHATROOMLIST ="ChatRoomList";
+    public static String MSSAGES = "Messages";
     String id;
     String friendId;
     UserDetails user;
@@ -110,16 +110,16 @@ public class RequestFriendListAdapter extends BaseAdapter{
        id = preferences.getString(mContext.getString(R.string.ownerid),"");
         final String chatRoomId = UUID.randomUUID().toString();
         ChatRoom chatRoom = new ChatRoom(chatRoomId);
-        DatabaseReference newFriendReference = FirebaseDatabase.getInstance().getReference().child(newFriend).child(friendId);
+        DatabaseReference newFriendReference = FirebaseDatabase.getInstance().getReference().child(NEWFRIEND).child(friendId);
         SendFriendRequest ownRequest = new SendFriendRequest(id);
         newFriendReference.child(id).setValue(ownRequest);
-        DatabaseReference friendListReference = FirebaseDatabase.getInstance().getReference().child(friendList).child(id);
+        DatabaseReference friendListReference = FirebaseDatabase.getInstance().getReference().child(FRIENDLIST).child(id);
         SuccessFriendRequest hisRequest = new SuccessFriendRequest(friendId,chatRoomId);
         friendListReference.child(friendId).setValue(hisRequest);
-        friendListReference = FirebaseDatabase.getInstance().getReference().child(friendList).child(friendId);
+        friendListReference = FirebaseDatabase.getInstance().getReference().child(FRIENDLIST).child(friendId);
         hisRequest = new SuccessFriendRequest(id,chatRoomId);
         friendListReference.child(id).setValue(hisRequest);
-        FirebaseDatabase.getInstance().getReference().child(chatRoomList).child(chatRoomId).setValue(chatRoom);
+        FirebaseDatabase.getInstance().getReference().child(CHATROOMLIST).child(chatRoomId).setValue(chatRoom);
 
         final DatabaseReference users = FirebaseDatabase.getInstance().getReference().child("users").child(friendId);
         users.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -131,7 +131,7 @@ public class RequestFriendListAdapter extends BaseAdapter{
                     saveImageToDatabase(user,position);
                     friendListItems.remove(position);
                     notifyDataSetChanged();
-                    FirebaseDatabase.getInstance().getReference().child(friendRequest).child(id).child(friendId).removeValue();
+                    FirebaseDatabase.getInstance().getReference().child(FRIENDREQUEST).child(id).child(friendId).removeValue();
                 }
             }
 

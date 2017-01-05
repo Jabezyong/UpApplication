@@ -1,6 +1,10 @@
 package com.application.upapplication.Views;
 
 import android.app.NotificationManager;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
@@ -15,6 +19,7 @@ import android.widget.ListView;
 import com.application.upapplication.Controller.DatabaseHelper;
 import com.application.upapplication.Controller.MsgAdapter;
 import com.application.upapplication.Controller.MyFirebaseInstanceIDService;
+import com.application.upapplication.Database.UpDatabaseHelper;
 import com.application.upapplication.Model.Message;
 import com.application.upapplication.R;
 import com.google.firebase.database.ChildEventListener;
@@ -22,25 +27,33 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
-    private static final String user = "Jabez";
+    public static String BUNDLE = "com.application.upapplication.BUNDLE";
+    public static String CHATROOM = "CHATROOM";
+    public static String CHATROOMID =  "CHATROOMID";
+    public static String FRIENDID = " FRIENDID";
+    private final String MESSAGE = " MESSAGES";
     private ListView msgListView;
     private EditText inputText;
     private Button send;
     private MsgAdapter adapter;
-
+    private String lastMsgKey;
+    String ownerId ;
+    String friendId;
+    String roomId;
+    private String chat_msg,chat_sender;
     private List<Message> msgList = new ArrayList<Message>();
-    private FirebaseDatabase  database = FirebaseDatabase.getInstance();
-    private DatabaseReference root = FirebaseDatabase.getInstance().getReference().getRoot();
-    DatabaseReference myRef = database.getReference().child("yes");
+    private DatabaseReference messageReference ;
     MyFirebaseInstanceIDService serve;
 
     DatabaseHelper myDb;
@@ -48,10 +61,11 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatroom);
+        SharedPreferences preferences = getSharedPreferences(MainActivity.UPPREFERENCE, Context.MODE_PRIVATE);
+        ownerId = preferences.getString(getString(R.string.ownerid),"");
         initView();
         initMsg();
-        String username = "puf";
-        FirebaseMessaging.getInstance().subscribeToTopic("user_"+username);
+        FirebaseMessaging.getInstance().subscribeToTopic("user_"+ownerId);
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -68,35 +82,9 @@ public class ChatActivity extends AppCompatActivity {
         adapter = new MsgAdapter(ChatActivity.this,R.layout.msg_item,msgList);
         msgListView = (ListView) findViewById(R.id.msg_list_view);
         msgListView.setAdapter(adapter);
-        myRef.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                append_chat_conversation(dataSnapshot);
-                recNotification();
-            }
 
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
     }
-    private String chat_msg,chat_sender;
+
     private void append_chat_conversation(DataSnapshot dataSnapshot) {
 //        temp_key = myRef.push().getKey();
 //        myRef.updateChildren(userData);
@@ -106,7 +94,7 @@ public class ChatActivity extends AppCompatActivity {
             chat_msg = (String) ((DataSnapshot)i.next()).getValue();
             chat_sender = (String) ((DataSnapshot)i.next()).getValue();
             Message m = null;
-            if(chat_sender.equals(user)){
+            if(chat_sender.equals(ownerId)){
                 m = new Message(chat_msg,Message.TYPE_SEND);
             }else{
                 m = new Message(chat_msg,Message.TYPE_RECEIVED);
@@ -121,14 +109,15 @@ public class ChatActivity extends AppCompatActivity {
         if(!TextUtils.isEmpty(msg)) {
             inputText.setEnabled(false);
             inputText.setText("");
-            Map<String, Object> userData = new HashMap<String, Object>();
-            String temp_key = myRef.push().getKey();
-            myRef.updateChildren(userData);
-            DatabaseReference msg_root = myRef.child(temp_key);
-            Map<String, Object> msgContent = new HashMap<String, Object>();
-            msgContent.put("name", user);
-            msgContent.put("msg", msg);
-            msg_root.updateChildren(msgContent);
+            DatabaseReference push = messageReference.push();
+            String msgId = push.getKey();
+            Message newMsg = new Message(msgId,ownerId,friendId,msg,Message.TEXT);
+            push.setValue(newMsg);
+            msgList.add(newMsg);
+            adapter.notifyDataSetChanged();
+
+
+
         }
         inputText.setEnabled(true);
 //        Intent intent = new Intent(LoginActivity.class);
@@ -150,12 +139,31 @@ public class ChatActivity extends AppCompatActivity {
         nm.notify(1,noti.build());
     }
     private void initMsg(){
-        Message msg1 = new Message("Hello, how are you?", Message.TYPE_RECEIVED);
-        msgList.add(msg1);
-        Message msg2 = new Message("Fine, thank you, and you?", Message.TYPE_SEND);
-        msgList.add(msg2);
-        Message msg3 = new Message("I am fine, too!", Message.TYPE_RECEIVED);
-        msgList.add(msg3);
+        Bundle bundleExtra = getIntent().getBundleExtra(BUNDLE);
+        roomId = bundleExtra.getString(CHATROOMID);
+        friendId = bundleExtra.getString(FRIENDID);
+        UpDatabaseHelper helper = new UpDatabaseHelper(this);
+        SQLiteDatabase readableDatabase = helper.getReadableDatabase();
+        String selection = UpDatabaseHelper.CHATROOM_ID_COLUMN + " = ?";
+        String[] selectionArgs = { roomId };
+        Cursor msgCursor = readableDatabase.query(UpDatabaseHelper.MESSAGES_TABLE,
+                new String[]{
+                        UpDatabaseHelper.MESSAGEID_COLUMN,
+                        UpDatabaseHelper.CHATROOM_ID_COLUMN,
+                        UpDatabaseHelper.SENDER_COLUMN,
+                        UpDatabaseHelper.RECEIVER_COLUMN,
+                        UpDatabaseHelper.CONTENT_COLUMN,
+                        UpDatabaseHelper.TIMESTAMP_COLUMN
+                },
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null
+                );
+        new readMsgTask().execute(msgCursor);
+        messageReference = FirebaseDatabase.getInstance().getReference().child(MESSAGE).child(roomId);
+
 
     }
     private class GetToken extends AsyncTask<Void,Void,Void>{
@@ -165,6 +173,50 @@ public class ChatActivity extends AppCompatActivity {
             serve = new MyFirebaseInstanceIDService();
             serve.onTokenRefresh();
             return null;
+        }
+    }
+    private class readMsgTask extends AsyncTask<Cursor,Void,Void>{
+
+        @Override
+        protected Void doInBackground(Cursor... params) {
+            Cursor cursor = params[0];
+            if(cursor.getCount()>0){
+                Message msg;
+                cursor.moveToFirst();
+                while (!cursor.isLast()){
+                    String msgid = cursor.getString(cursor.getColumnIndexOrThrow(UpDatabaseHelper.MESSAGEID_COLUMN));
+                    String senderId = cursor.getString(cursor.getColumnIndexOrThrow(UpDatabaseHelper.SENDER_COLUMN));
+                    String receiverId = cursor.getString(cursor.getColumnIndexOrThrow(UpDatabaseHelper.RECEIVER_COLUMN));
+                    String content =  cursor.getString(cursor.getColumnIndexOrThrow(UpDatabaseHelper.CONTENT_COLUMN));
+                    Date timeStamp = new Date(cursor.getInt(cursor.getColumnIndexOrThrow(UpDatabaseHelper.CONTENT_COLUMN)));
+
+                    if(!senderId.equals(ownerId)){
+                        msg = new Message(content,Message.TYPE_RECEIVED);
+                    }else{
+                        msg = new Message(content,Message.TYPE_RECEIVED);
+                    }
+                    lastMsgKey = msgid;
+                    msgList.add(msg);
+                    cursor.moveToNext();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            adapter.notifyDataSetChanged();
+            messageReference.startAt(lastMsgKey).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    recNotification();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
         }
     }
 }

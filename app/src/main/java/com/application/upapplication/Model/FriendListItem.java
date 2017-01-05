@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 public class FriendListItem {
     String friend_name;
     String profile_id;
+    String roomId;
     Bitmap bitmap;
 
     public FriendListItem() {
@@ -40,6 +41,14 @@ public class FriendListItem {
 
     public void setProfile_id(String profile_id) {
         this.profile_id = profile_id;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
     }
 
     public Bitmap getBitmap() {
