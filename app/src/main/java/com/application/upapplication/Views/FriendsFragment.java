@@ -203,6 +203,10 @@ public class FriendsFragment extends Fragment {
         UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         db.insert(UpDatabaseHelper.IMAGES_TABLE,null,values);
+        String fullName = user.getFirstName()+" "+user.getLastName();
+        FriendListItem item = new FriendListItem(fullName,user.getId(),bitmap);
+        friendListItems.add(item);
+        friendListAdapter.notifyDataSetChanged();
         db.close();
     }
     private class myTask extends AsyncTask<Cursor,Void,Void>{
