@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 
@@ -43,6 +44,7 @@ public class TinderCard {
     private Context context;
     private SwipePlaceHolderView swipeView;
     private Button btnSearch;
+    private LinearLayout wholeLayout;
     @View(R.id.profileImageView)
     private ImageView profileImageView;
 

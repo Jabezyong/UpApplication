@@ -207,7 +207,7 @@ public class ChatActivity extends AppCompatActivity {
             if(cursor.getCount()>0){
                 Message msg;
                 cursor.moveToFirst();
-                while (!cursor.isLast()){
+                for(int i=0;i<cursor.getCount();i++){
                     String msgid = cursor.getString(cursor.getColumnIndexOrThrow(UpDatabaseHelper.MESSAGEID_COLUMN));
                     String senderId = cursor.getString(cursor.getColumnIndexOrThrow(UpDatabaseHelper.SENDER_COLUMN));
                     String receiverId = cursor.getString(cursor.getColumnIndexOrThrow(UpDatabaseHelper.RECEIVER_COLUMN));

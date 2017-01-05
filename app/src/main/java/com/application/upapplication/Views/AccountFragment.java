@@ -347,15 +347,11 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                     targetFemale = 0;
                 }
             }
-            saving();
+            verifySms();
         }
     }
     private void saving() {
-        if(!found) {
-            verifySms();
-        }else {
 
-            initFireBase();
             if (birthday != null) {
                 String[] separated = birthday.split("/");
                 age = 2017- Integer.valueOf(separated[2]);
@@ -367,7 +363,6 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
             Toast.makeText(getContext(), lastLogin.toString(), Toast.LENGTH_LONG).show();
             saveImageToDatabase();
             executeQuery();
-        }
     }
     private void executeQuery(){
         ContentValues values = new ContentValues();
@@ -407,38 +402,39 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         if(dialog.isShowing()){
             dialog.dismiss();
         }
-        getActivity().finish();
+//        getActivity().finish();
         Intent intent = new Intent(getContext(),MainActivity.class);
         startActivity(intent);
     }
 
     private void verifySms() {
-        SMSSDK.initSDK(getContext(), APPKEY, APPSECRET);
+        if(!found) {
+            SMSSDK.initSDK(getContext(), APPKEY, APPSECRET);
 //        phone = "0163582906";
 
-        final RegisterPage registerPage = new RegisterPage();
-        registerPage.setRegisterCallback(new EventHandler() {
-            public void afterEvent(int event, int result, Object data) {
-                if (result == SMSSDK.RESULT_COMPLETE) {
-                    HashMap<String, Object> phoneMap = (HashMap<String, Object>) data;
-                    String country = (String) phoneMap.get("country");
-                    phone = "0"+ (String) phoneMap.get("phone");
-                    Toast.makeText(getContext(), phone, Toast.LENGTH_LONG).show();
-                    verified = 1;
-                    found = true;
-                    saving();
-                }else if(result == SMSSDK.RESULT_ERROR){
-                    phone = "0163582906";
+            final RegisterPage registerPage = new RegisterPage();
+            registerPage.setRegisterCallback(new EventHandler() {
+                public void afterEvent(int event, int result, Object data) {
+                    if (result == SMSSDK.RESULT_COMPLETE) {
+                        HashMap<String, Object> phoneMap = (HashMap<String, Object>) data;
+                        String country = (String) phoneMap.get("country");
+                        phone = "0" + (String) phoneMap.get("phone");
+                        Toast.makeText(getContext(), phone, Toast.LENGTH_LONG).show();
+                        verified = 1;
+                        saving();
+                    } else if (result == SMSSDK.RESULT_ERROR) {
+                        phone = "0163582906";
+                    }
                 }
-            }
-        });
-        registerPage.show(getContext());
-
+            });
+            registerPage.show(getContext());
+        }
     }
 
     private void initFireBase(){
         mStorage = FirebaseStorage.getInstance().getReference();
-        filepath = mStorage.child("UserPhotos").child(fbId);
+        filepath = mStorage.child("UserPhotos").child(fbId+".png");
+
     }
     private void registerUser(String phone) {
         UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
@@ -480,7 +476,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         FirebaseDatabase firebase = FirebaseDatabase.getInstance();
         DatabaseReference databaseReference = firebase.getReference();
         UserDetails newUser = new UserDetails(fbId,firstName,lastName,gender,birthday,phone,course,year,aboutMe,age,song,sport,food,1,targetMale,targetFemale,lastLogin,photo);
-        databaseReference.child("Users").child(fbId).setValue(newUser);
+        databaseReference.child("users").child(fbId).setValue(newUser);
     }
     private void uploadProfilePhoto() {
 
@@ -504,7 +500,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 photo  = taskSnapshot.getDownloadUrl().toString();
-                Toast.makeText(getContext(),"Photo= "+photo,Toast.LENGTH_LONG).show();
+//                Toast.makeText(getContext(),"Photo= "+photo,Toast.LENGTH_LONG).show();
                 Log.e("Photo url",photo);
                 startNewActivity();
             }
@@ -545,6 +541,9 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                     Toast.makeText(getContext(),"Cant read from databaese",Toast.LENGTH_LONG).show();
                     init();
                     downloadPhotoFromFacebook();
+                    if(dialog.isShowing()){
+                        dialog.dismiss();
+                    }
                     mDatabase.removeEventListener(eventListener);
                 }else{
                     found = true;

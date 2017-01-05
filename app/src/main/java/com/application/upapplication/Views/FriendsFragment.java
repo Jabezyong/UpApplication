@@ -118,23 +118,25 @@ public class FriendsFragment extends Fragment {
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                SuccessFriendRequest request = dataSnapshot.getValue(SuccessFriendRequest.class);
-                final String friendId = request.getFriendId();
-                final String roomId = request.getRoomId();
-                FirebaseDatabase.getInstance().getReference().child("Users").child(friendId)
-                        .addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                UserDetails userDetails = dataSnapshot.getValue(UserDetails.class);
-                                executeQuery(userDetails,roomId);
-                                downloadBitmap(userDetails);
-                            }
+                if(dataSnapshot.getValue() != null ){
+                    SuccessFriendRequest request = dataSnapshot.getValue(SuccessFriendRequest.class);
+                    final String friendId = request.getFriendId();
+                    final String roomId = request.getRoomId();
+                    FirebaseDatabase.getInstance().getReference().child("users").child(friendId)
+                            .addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    UserDetails userDetails = dataSnapshot.getValue(UserDetails.class);
+                                    executeQuery(userDetails, roomId);
+                                    downloadBitmap(userDetails);
+                                }
 
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
 
-                            }
-                        });
+                                }
+                            });
+                }
             }
 
             @Override

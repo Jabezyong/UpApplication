@@ -84,7 +84,7 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
         populateGefenceList();
         addGeofences();
         mSwipView.getBuilder()
-                .setDisplayViewCount(4)
+                .setDisplayViewCount(5)
                 .setWidthSwipeDistFactor(15)
                 .setHeightSwipeDistFactor(20)
                 .setSwipeDecor(new SwipeDecor()
@@ -257,7 +257,7 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
                         waitDialog.dismiss();
                     }
 //                    if(waitDialog.isShowing())
-//                        waitDialog.dismiss();
+//                        waitDialog.dismiss();想
                 }
             }
 
