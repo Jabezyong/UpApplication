@@ -13,6 +13,7 @@ public class Message {
     public static final int AUDIO = 1;
     public static final int IMAGE =  2;
     private String messageId;
+    private String roomId;
     private String sender;
     private String receiver;
     private String content;
@@ -50,6 +51,22 @@ public class Message {
         this.contentType =contentType;
         this.deliverType = deliverType;
         this.seen = seen;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
     }
 
     public static int getTypeReceived() {

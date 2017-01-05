@@ -353,20 +353,21 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
     private void saving() {
         if(!found) {
             verifySms();
-        }
+        }else {
 
-        initFireBase();
-        if(birthday !=null) {
-            String[] separated = birthday.split("/");
-            age = 2016 - Integer.valueOf(separated[2]);
-        }else{
-            age= -1;
-        }
-        lastLogin = new Date();
+            initFireBase();
+            if (birthday != null) {
+                String[] separated = birthday.split("/");
+                age = 2017- Integer.valueOf(separated[2]);
+            } else {
+                age = 20;
+            }
+            lastLogin = new Date();
 
-        Toast.makeText(getContext(),lastLogin.toString(),Toast.LENGTH_LONG).show();
-        saveImageToDatabase();
-        executeQuery();
+            Toast.makeText(getContext(), lastLogin.toString(), Toast.LENGTH_LONG).show();
+            saveImageToDatabase();
+            executeQuery();
+        }
     }
     private void executeQuery(){
         ContentValues values = new ContentValues();
@@ -425,6 +426,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                     phone = "0"+ (String) phoneMap.get("phone");
                     Toast.makeText(getContext(), phone, Toast.LENGTH_LONG).show();
                     verified = 1;
+                    found = true;
                     saving();
                 }else if(result == SMSSDK.RESULT_ERROR){
                     phone = "0163582906";

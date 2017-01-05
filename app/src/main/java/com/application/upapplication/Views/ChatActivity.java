@@ -1,6 +1,7 @@
 package com.application.upapplication.Views;
 
 import android.app.NotificationManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -55,6 +56,7 @@ public class ChatActivity extends AppCompatActivity {
     private List<Message> msgList = new ArrayList<Message>();
     private DatabaseReference messageReference ;
     MyFirebaseInstanceIDService serve;
+    SQLiteDatabase writaleDatabase;
 
     DatabaseHelper myDb;
     @Override
@@ -112,8 +114,11 @@ public class ChatActivity extends AppCompatActivity {
             DatabaseReference push = messageReference.push();
             String msgId = push.getKey();
             Message newMsg = new Message(msgId,ownerId,friendId,msg,Message.TEXT);
-            push.setValue(newMsg);
+            newMsg.setDeliverType(Message.TYPE_SEND);
+            newMsg.setRoomId(roomId);
             msgList.add(newMsg);
+            push.setValue(newMsg);
+            saveInDatabase(newMsg);
             adapter.notifyDataSetChanged();
 
 
@@ -123,6 +128,24 @@ public class ChatActivity extends AppCompatActivity {
 //        Intent intent = new Intent(LoginActivity.class);
 
 
+    }
+
+    private void saveInDatabase(Message msg) {
+        ContentValues value = new ContentValues();
+        value.put(UpDatabaseHelper.MESSAGEID_COLUMN,msg.getMessageId());
+        value.put(UpDatabaseHelper.CHATROOM_ID_COLUMN,msg.getRoomId());
+        value.put(UpDatabaseHelper.SENDER_COLUMN,msg.getSender());
+        value.put(UpDatabaseHelper.RECEIVER_COLUMN,msg.getReceiver());
+        value.put(UpDatabaseHelper.CONTENT_COLUMN,msg.getContent());
+        value.put(UpDatabaseHelper.CONTENT_TYPE_COLUMN,msg.getContentType());
+        value.put(UpDatabaseHelper.TIMESTAMP_COLUMN,msg.getDate().toString());
+        writaleDatabase.insert(UpDatabaseHelper.MESSAGES_TABLE,null,value);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        writaleDatabase.close();
     }
 
     private void recNotification(){
@@ -144,6 +167,7 @@ public class ChatActivity extends AppCompatActivity {
         friendId = bundleExtra.getString(FRIENDID);
         UpDatabaseHelper helper = new UpDatabaseHelper(this);
         SQLiteDatabase readableDatabase = helper.getReadableDatabase();
+        writaleDatabase = helper.getWritableDatabase();
         String selection = UpDatabaseHelper.CHATROOM_ID_COLUMN + " = ?";
         String[] selectionArgs = { roomId };
         Cursor msgCursor = readableDatabase.query(UpDatabaseHelper.MESSAGES_TABLE,
@@ -193,7 +217,7 @@ public class ChatActivity extends AppCompatActivity {
                     if(!senderId.equals(ownerId)){
                         msg = new Message(content,Message.TYPE_RECEIVED);
                     }else{
-                        msg = new Message(content,Message.TYPE_RECEIVED);
+                        msg = new Message(content,Message.TYPE_SEND);
                     }
                     lastMsgKey = msgid;
                     msgList.add(msg);
