@@ -351,8 +351,9 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         }
     }
     private void saving() {
-        verifySms();
-
+        if(!found) {
+            verifySms();
+        }
 
         initFireBase();
         if(birthday !=null) {
@@ -478,7 +479,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         FirebaseDatabase firebase = FirebaseDatabase.getInstance();
         DatabaseReference databaseReference = firebase.getReference();
         UserDetails newUser = new UserDetails(fbId,firstName,lastName,gender,birthday,phone,course,year,aboutMe,age,song,sport,food,1,targetMale,targetFemale,lastLogin,photo);
-        databaseReference.child("users").child(fbId).setValue(newUser);
+        databaseReference.child("Users").child(fbId).setValue(newUser);
     }
     private void uploadProfilePhoto() {
 
@@ -545,6 +546,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                     downloadPhotoFromFacebook();
                     mDatabase.removeEventListener(eventListener);
                 }else{
+                    found = true;
                     UserDetails user = dataSnapshot.getValue(UserDetails.class);
                     birthday = user.getBirthday();
                     firstName = user.getFirstName();
@@ -613,13 +615,13 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         db.insert(UpDatabaseHelper.IMAGES_TABLE,null,values);
     }
 
-    private byte[] getBytes(Bitmap bitmap){
+    public static byte[] getBytes(Bitmap bitmap){
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
         return stream.toByteArray();
     }
 
-    private Bitmap getImage(byte[] data){
+    public static Bitmap getImage(byte[] data){
         return BitmapFactory.decodeByteArray(data,0,data.length);
     }
     //    private void retrieveDataFromDatabase() {

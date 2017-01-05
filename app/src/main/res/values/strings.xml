@@ -13,6 +13,7 @@
     <string name="reject">Reject</string>
     <string name="search">Search</string>
     <string name="friend_request">Friend Request</string>
+    <string name="chat">Chat</string>
     <string-array name="year">
         <item>Academic Year</item>
         <item>1</item>

@@ -55,7 +55,7 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
         //for request friend table
         public static final String INDEX_COLUMN ="id";
         public static final String FRIEND_ID_COLUMN ="friendid";
-        public static final String CHATROOM_COLUMN = "chatroomid";
+        public static final String CHATROOM_ID_COLUMN = "chatroomid";
         public static final String APPROVE_COLUMN ="approved";
         //for messages table
         public static final String MESSAGEID_COLUMN="messageid";
@@ -110,16 +110,18 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
 
         public static final String CREATE_FRIENDSHIP_TABLE=
                 "CREATE TABLE "+FRIENDSHIP_TABLE+"("+
-                        INDEX_COLUMN+ " INTEGER PRIMARY KEY, "+
+//                        INDEX_COLUMN+ " INTEGER PRIMARY KEY, "+
                         FRIEND_ID_COLUMN + " TEXT, "+
-                        APPROVE_COLUMN+" INTEGER NOT NULL, "+
-                        CHATROOM_COLUMN+" TEXT, "+
+//                        APPROVE_COLUMN+" INTEGER NOT NULL, "+
+                        FIRST_NAME_COLUMN + " TEXT,"+
+                        LAST_NAME_COLUMN + " TEXT,"+
+                        CHATROOM_ID_COLUMN+" TEXT, "+
                         "FOREIGN KEY("+FRIEND_ID_COLUMN+") REFERENCES "+
                         USER_TABLE+"("+FACEBOOK_ID_COLUMN+"));";
         String CREATE_MESSAGE_TABLE =  "CREATE TABLE" + MESSAGES_TABLE +
                 "("+
                 MESSAGEID_COLUMN + " TEXT PRIMARY KEY, " +
-                CHATROOM_COLUMN + " TEXT NOT NULL, " +
+                CHATROOM_ID_COLUMN + " TEXT NOT NULL, " +
                 SENDER_COLUMN + "  TEXT NOT NULL, " +
                 RECEIVER_COLUMN + " TEXT NOT NULL, " +
                 TEXT_COLUMN + " TEXT , " +
@@ -131,8 +133,8 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
                 USER_TABLE+"("+FACEBOOK_ID_COLUMN+")"+
                 "FOREIGN KEY ("+RECEIVER_COLUMN+") REFERENCES "+
                 USER_TABLE+"("+FACEBOOK_ID_COLUMN+")"+
-                "FOREIGN KEY ("+CHATROOM_COLUMN+") REFERENCES "+
-        FRIENDSHIP_TABLE+"("+CHATROOM_COLUMN+")"+
+                "FOREIGN KEY ("+CHATROOM_ID_COLUMN+") REFERENCES "+
+        FRIENDSHIP_TABLE+"("+CHATROOM_ID_COLUMN+")"+
                 " ) ";
         String CREATE_IMAGES_TABLE =" CREATE TABLE "+IMAGES_TABLE +
                 "( "+ IMAGES_ID_COLUMN +" TEXT PRIMARY KEY, "+
@@ -243,15 +245,7 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
                     null,
                     null
             );
-            Cursor cursor1 = db.query(
-                    IMAGES_TABLE,
-                    columns,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            );
+
             if(cursor!=null){
                 cursor.moveToFirst();
             }else{

@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -54,19 +55,20 @@ public class FriendListAdapter extends BaseAdapter {
             convertView = mInfater.inflate(R.layout.friendlist_item,null);
             viewHolder.ivProfile_pic = (ImageView) convertView.findViewById(R.id.profile_pic);
             viewHolder.tvFriend_name = (TextView) convertView.findViewById(R.id.friend_name);
+            viewHolder.btnChat = (Button) convertView.findViewById(R.id.btnChat);
             convertView.setTag(viewHolder);
         }else{
             viewHolder = (ViewHolder) convertView.getTag();
         }
         FriendListItem item =  friends.get(position);
         viewHolder.tvFriend_name.setText(item.getFriend_name());
-//        viewHolder.ivProfile_pic.setImageResource(item.getProfile_id());
+        viewHolder.ivProfile_pic.setImageBitmap(item.getBitmap());
         return convertView;
     }
 
     private class ViewHolder{
         ImageView ivProfile_pic;
         TextView tvFriend_name;
-
+        Button btnChat;
     }
 }

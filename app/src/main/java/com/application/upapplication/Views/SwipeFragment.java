@@ -62,6 +62,7 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
     private DatabaseReference mDataBase;
     ProgressDialog waitDialog;
     int count = 0;
+    int totalPhoto = 0;
     @BindView(R.id.swipeView)
     private SwipePlaceHolderView mSwipView;
     private ImageButton btnUp,btnDown;
@@ -218,7 +219,15 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
             public void onSuccess(byte[] bytes) {
                 card.setProfileImageView(getImage(bytes));
                 tinderCards.add(card);
-                ++count;
+
+                totalPhoto++;
+                if(totalPhoto==5){
+                    if(waitDialog.isShowing()){
+                        waitDialog.dismiss();
+                    }
+                    totalPhoto  =0;
+
+                }
             }
         });
     }
@@ -232,14 +241,17 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
                 if(dataSnapshot!=null){
                     Iterable<DataSnapshot> children = dataSnapshot.getChildren();
                     for(DataSnapshot data:children){
+
                         insertCardView(data);
-                        if(count==3){
-                            Toast.makeText(getContext(),"Read enough data",Toast.LENGTH_LONG).show();
-                            if(waitDialog.isShowing()){
-                                waitDialog.dismiss();
-                            }
+                        count++;
+                        if(count==5){
+//                            Toast.makeText(getContext(),"Read enough data",Toast.LENGTH_LONG).show();
+
                             mDataBase.removeEventListener(listener);
+                            count = 0;
+                            break;
                         }
+
                     }
                     if(waitDialog.isShowing()){
                         waitDialog.dismiss();

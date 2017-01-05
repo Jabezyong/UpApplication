@@ -7,10 +7,12 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ListView;
+import android.widget.Toast;
 
 
 import com.application.upapplication.Controller.RequestFriendListAdapter;
@@ -18,6 +20,7 @@ import com.application.upapplication.Model.FriendListItem;
 import com.application.upapplication.Model.SendFriendRequest;
 import com.application.upapplication.Model.UserDetails;
 import com.application.upapplication.R;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -31,8 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RequestFriendActivity extends AppCompatActivity {
-    private static int totalCount = 0;
-    private static int currentCount = 0;
+    private int totalCount = 0;
+    private int currentCount = 0;
     ProgressDialog dialog;
     String friendTree ="Friend Request";
     ListView requestFriendList;
@@ -61,7 +64,7 @@ public class RequestFriendActivity extends AppCompatActivity {
     }
     private void getFriendRequest(){
 
-        DatabaseReference friendReferece = FirebaseDatabase.getInstance().getReference().child(friendTree).child("10209068580364318");
+        DatabaseReference friendReferece = FirebaseDatabase.getInstance().getReference().child(friendTree).child(ownerId);
         friendReferece.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -71,8 +74,7 @@ public class RequestFriendActivity extends AppCompatActivity {
                         ++totalCount;
                         addIntoList(data);
                     }
-                    adapter = new RequestFriendListAdapter(getApplicationContext(),friendListItems);
-                    requestFriendList.setAdapter(adapter);
+
                 }else{
                     showMessageDialog();
                 }
@@ -97,6 +99,7 @@ public class RequestFriendActivity extends AppCompatActivity {
                 if(dataSnapshot !=null){
                     UserDetails user = dataSnapshot.getValue(UserDetails.class);
                     item.setFriend_name(user.getFirstName() + " " +user.getLastName());
+                    item.setProfile_id(user.getId());
                 }
             }
 
@@ -112,15 +115,29 @@ public class RequestFriendActivity extends AppCompatActivity {
             public void onSuccess(byte[] bytes) {
                 item.setBitmap(getImage(bytes));
                 friendListItems.add(item);
-                if(adapter !=null){
-                    adapter.notifyDataSetChanged();
+//                if(adapter !=null){
+//                    adapter.notifyDataSetChanged();
                     ++currentCount;
                     if(currentCount == totalCount){
                         if(dialog.isShowing()){
                             dialog.dismiss();
                         }
+                        adapter = new RequestFriendListAdapter(getApplicationContext(),friendListItems);
+                        requestFriendList.setAdapter(adapter);
+                        totalCount = 0;
+                        currentCount = 0;
+
                     }
-                }
+//                }
+            }
+        });
+        filepath.getBytes(ONE_MEGABYTE).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getApplicationContext(),"Cannot retrieve photo in this moment",Toast.LENGTH_LONG).show();
+                if(dialog.isShowing()){
+                    dialog.dismiss();
+                };
             }
         });
         Log.d(getPackageName(),"Hello");

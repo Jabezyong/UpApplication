@@ -143,7 +143,7 @@ public class TinderCard {
             String FRIEND = params[2];
             SendFriendRequest request = new SendFriendRequest(ownerId);
             DatabaseReference friendReferece = FirebaseDatabase.getInstance().getReference().child(FRIEND).child(friendId);
-            friendReferece.push().setValue(request);
+            friendReferece.child(ownerId).setValue(request);
             return null;
         }
     }

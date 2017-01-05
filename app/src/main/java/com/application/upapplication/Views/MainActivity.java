@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ArrayList<String> permissionList = new ArrayList<String>();
         if (Build.VERSION.SDK_INT >= 23) {
             int readPhone = checkSelfPermission( Manifest.permission.READ_PHONE_STATE);
-            int receiveSms = checkSelfPermission(Manifest.permission.RECEIVE_SMS);
+//            int receiveSms = checkSelfPermission(Manifest.permission.RECEIVE_SMS);
             int readSms = checkSelfPermission(Manifest.permission.READ_SMS);
             int readContacts = checkSelfPermission(Manifest.permission.READ_CONTACTS);
             int readSdcard = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
@@ -67,9 +67,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (readPhone != PackageManager.PERMISSION_GRANTED) {
                 permissionList.add(Manifest.permission.READ_PHONE_STATE);
             }
-            if (receiveSms != PackageManager.PERMISSION_GRANTED) {
-                permissionList.add(Manifest.permission.RECEIVE_SMS);
-            }
+//            if (receiveSms != PackageManager.PERMISSION_GRANTED) {
+//                permissionList.add(Manifest.permission.RECEIVE_SMS);
+//            }
             if (readSms != PackageManager.PERMISSION_GRANTED) {
                 permissionList.add(Manifest.permission.READ_SMS);
             }
