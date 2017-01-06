@@ -13,6 +13,9 @@ import android.widget.TextView;
 import com.application.upapplication.Model.ChatListItem;
 import com.application.upapplication.R;
 
+import java.text.SimpleDateFormat;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -61,13 +64,17 @@ public class ChatListAdapter extends BaseAdapter {
         }
         ChatListItem row_pos = chatListItems.get(position);
 
-        holder.ivProfile_pic.setImageResource(row_pos.getProfile_pic_id());
+        holder.ivProfile_pic.setImageBitmap(row_pos.getProfile_pic());
         holder.tvFriend_name.setText(row_pos.getFriend_name());
         holder.tvLastMessage.setText(row_pos.getLastMsg());
-        holder.tvTime.setText(row_pos.getTime());
+        Date time = row_pos.getTime();
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm aa");
+        String timeString = sdf.format(time);
+        holder.tvTime.setText(timeString);
 
         return convertView;
     }
+
 
     private class ViewHolder{
         ImageView ivProfile_pic;

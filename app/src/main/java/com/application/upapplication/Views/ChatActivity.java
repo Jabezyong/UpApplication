@@ -21,6 +21,7 @@ import com.application.upapplication.Controller.DatabaseHelper;
 import com.application.upapplication.Controller.MsgAdapter;
 import com.application.upapplication.Controller.MyFirebaseInstanceIDService;
 import com.application.upapplication.Database.UpDatabaseHelper;
+import com.application.upapplication.Model.ChatListItem;
 import com.application.upapplication.Model.Message;
 import com.application.upapplication.R;
 import com.google.firebase.database.ChildEventListener;
@@ -43,7 +44,8 @@ public class ChatActivity extends AppCompatActivity {
     public static String CHATROOM = "CHATROOM";
     public static String CHATROOMID =  "CHATROOMID";
     public static String FRIENDID = " FRIENDID";
-    private final String MESSAGE = " MESSAGES";
+    public static String NAME = "NAME";
+    private final String MESSAGE = "MESSAGES";
     private ListView msgListView;
     private EditText inputText;
     private Button send;
@@ -52,6 +54,7 @@ public class ChatActivity extends AppCompatActivity {
     String ownerId ;
     String friendId;
     String roomId;
+    String fullName;
     private String chat_msg,chat_sender;
     private List<Message> msgList = new ArrayList<Message>();
     private DatabaseReference messageReference ;
@@ -91,19 +94,29 @@ public class ChatActivity extends AppCompatActivity {
 //        temp_key = myRef.push().getKey();
 //        myRef.updateChildren(userData);
 //        DatabaseReference msg_root = myRef.child(temp_key);
-        Iterator i = dataSnapshot.getChildren().iterator();
-        while(i.hasNext()){
-            chat_msg = (String) ((DataSnapshot)i.next()).getValue();
-            chat_sender = (String) ((DataSnapshot)i.next()).getValue();
-            Message m = null;
-            if(chat_sender.equals(ownerId)){
-                m = new Message(chat_msg,Message.TYPE_SEND);
+        if(dataSnapshot.getValue()!=null) {
+            Message msg = dataSnapshot.getValue(Message.class);
+            Iterator i = dataSnapshot.getChildren().iterator();
+            if(msg.getReceiver().equals(friendId)){
+                msg.setDeliverType(Message.TYPE_SEND);
             }else{
-                m = new Message(chat_msg,Message.TYPE_RECEIVED);
+                msg.setDeliverType(Message.TYPE_RECEIVED);
             }
-            msgList.add(m);
+            msgList.add(msg);
+            adapter.notifyDataSetChanged();
         }
-        adapter.notifyDataSetChanged();
+//        while(i.hasNext()){
+//            chat_msg = (String) ((DataSnapshot)i.next()).getValue();
+//            chat_sender = (String) ((DataSnapshot)i.next()).getValue();
+//            Message m = null;
+//            if(chat_sender.equals(ownerId)){
+//                m = new Message(chat_msg,Message.TYPE_SEND);
+//            }else{
+//                m = new Message(chat_msg,Message.TYPE_RECEIVED);
+//            }
+//            msgList.add(msg);
+//        }
+
     }
 
     private void sendMsg(){
@@ -116,10 +129,11 @@ public class ChatActivity extends AppCompatActivity {
             Message newMsg = new Message(msgId,ownerId,friendId,msg,Message.TEXT);
             newMsg.setDeliverType(Message.TYPE_SEND);
             newMsg.setRoomId(roomId);
-            msgList.add(newMsg);
+
             push.setValue(newMsg);
+            msgList.add(newMsg);
             saveInDatabase(newMsg);
-            adapter.notifyDataSetChanged();
+//            adapter.notifyDataSetChanged();
 
 
 
@@ -140,6 +154,7 @@ public class ChatActivity extends AppCompatActivity {
         value.put(UpDatabaseHelper.CONTENT_TYPE_COLUMN,msg.getContentType());
         value.put(UpDatabaseHelper.TIMESTAMP_COLUMN,msg.getDate().toString());
         writaleDatabase.insert(UpDatabaseHelper.MESSAGES_TABLE,null,value);
+        ChatListFragment.updateUI(friendId,msg);
     }
 
     @Override
@@ -165,6 +180,8 @@ public class ChatActivity extends AppCompatActivity {
         Bundle bundleExtra = getIntent().getBundleExtra(BUNDLE);
         roomId = bundleExtra.getString(CHATROOMID);
         friendId = bundleExtra.getString(FRIENDID);
+        fullName = bundleExtra.getString(NAME);
+        setTitle(fullName);
         UpDatabaseHelper helper = new UpDatabaseHelper(this);
         SQLiteDatabase readableDatabase = helper.getReadableDatabase();
         writaleDatabase = helper.getWritableDatabase();
@@ -187,6 +204,7 @@ public class ChatActivity extends AppCompatActivity {
                 );
         new readMsgTask().execute(msgCursor);
         messageReference = FirebaseDatabase.getInstance().getReference().child(MESSAGE).child(roomId);
+
 
 
     }
@@ -233,6 +251,7 @@ public class ChatActivity extends AppCompatActivity {
             messageReference.startAt(lastMsgKey).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
+                    append_chat_conversation(dataSnapshot);
                     recNotification();
                 }
 

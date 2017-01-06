@@ -11,7 +11,7 @@ public class FriendListItem {
     String profile_id;
     String roomId;
     Bitmap bitmap;
-
+    int position;
     public FriendListItem() {
 
     }
@@ -57,5 +57,13 @@ public class FriendListItem {
 
     public void setBitmap(Bitmap bitmap) {
         this.bitmap = bitmap;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 }

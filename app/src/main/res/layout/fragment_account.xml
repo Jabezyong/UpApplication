@@ -371,6 +371,7 @@
                     android:layout_marginRight="15dp"
                     android:layout_marginBottom="10dp"/>
             </LinearLayout>
+
             <Button
                 android:id="@+id/logout"
                 android:layout_gravity="left"
@@ -378,7 +379,9 @@
                 android:layout_height="match_parent"
                 android:text="Logout"
                 android:background="?android:attr/selectableItemBackground"
-                android:textColor="@color/cast_libraries_material_featurehighlight_outer_highlight_default_color" />
+                android:textColor="@color/cast_libraries_material_featurehighlight_outer_highlight_default_color"
+                android:visibility="gone" />
+
             <Button
                 android:id="@+id/btnContinue"
                 android:layout_gravity="right"

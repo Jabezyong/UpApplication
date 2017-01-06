@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.application.upapplication">
+
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -19,28 +20,32 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Views.MainActivity"
-            android:screenOrientation="portrait" >
+        <activity
+            android:name=".Views.MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Views.LoginActivity"
+        <activity
+            android:name=".Views.LoginActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".Views.AccountActivity"
+        <activity
+            android:name=".Views.AccountActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".Views.ChatActivity"
+        <activity
+            android:name=".Views.ChatActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name="com.mob.tools.MobUIShell"
             android:configChanges="keyboardHidden|orientation|screenSize|locale|layoutDirection"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar"
-            android:windowSoftInputMode="stateHidden|adjustResize"
-            android:screenOrientation="portrait" />
-
-        <activity android:name=".Views.RequestFriendActivity"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
+        <activity
+            android:name=".Views.RequestFriendActivity"
             android:screenOrientation="portrait" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -50,9 +55,9 @@
              sign the APK for publishing.
              You can define the keys for the debug and release targets in src/debug/ and src/release/. 
         -->
-        <!--<meta-data-->
-            <!--android:name="com.google.android.geo.API_KEY"-->
-            <!--android:value="@string/google_maps_key" />-->
+        <!-- <meta-data -->
+        <!-- android:name="com.google.android.geo.API_KEY" -->
+        <!-- android:value="@string/google_maps_key" /> -->
 
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
@@ -62,6 +67,11 @@
             android:name=".Controller.GeofenceTransitionsIntentService"
             android:enabled="true"
             android:exported="true" />
+
+        <activity
+            android:name=".BasicActivity"
+            android:label="@string/title_activity_basic"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

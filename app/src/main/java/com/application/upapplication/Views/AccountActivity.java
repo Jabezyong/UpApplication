@@ -10,6 +10,7 @@ import android.support.v4.util.LruCache;
 import android.support.v7.app.AppCompatActivity;
 
 
+import com.application.upapplication.Database.UpDatabaseHelper;
 import com.application.upapplication.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -25,6 +26,7 @@ public class AccountActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fragment);
+        deleteDatabase(UpDatabaseHelper.DATABASE_NAME);
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 8;
         mAuth = FirebaseAuth.getInstance();

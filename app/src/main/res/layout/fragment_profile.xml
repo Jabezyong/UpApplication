@@ -416,6 +416,15 @@
                 android:onClick="submit"
                 android:background="?android:attr/selectableItemBackground"
                 android:textColor="@color/cast_libraries_material_featurehighlight_outer_highlight_default_color" />
+            <Button
+            android:id="@+id/btnLogout"
+            android:layout_gravity="right"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/logout"
+            android:onClick="logOut"
+            android:background="?android:attr/selectableItemBackground"
+            android:textColor="@color/cast_libraries_material_featurehighlight_outer_highlight_default_color" />
         </LinearLayout>
     </ScrollView>
 

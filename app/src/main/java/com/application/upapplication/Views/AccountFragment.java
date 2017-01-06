@@ -7,10 +7,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -34,8 +36,11 @@ import android.widget.Toast;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageRequest;
+import com.application.upapplication.Controller.RequestFriendListAdapter;
 import com.application.upapplication.Controller.VolleyApplication;
 import com.application.upapplication.Database.UpDatabaseHelper;
+import com.application.upapplication.Model.FriendListItem;
+import com.application.upapplication.Model.SuccessFriendRequest;
 import com.application.upapplication.Model.UserDetails;
 import com.application.upapplication.R;
 import com.facebook.FacebookSdk;
@@ -59,6 +64,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import cn.smssdk.EventHandler;
 import cn.smssdk.SMSSDK;
@@ -360,7 +366,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
             }
             lastLogin = new Date();
 
-            Toast.makeText(getContext(), lastLogin.toString(), Toast.LENGTH_LONG).show();
+//            Toast.makeText(getContext(), lastLogin.toString(), Toast.LENGTH_LONG).show();
             saveImageToDatabase();
             executeQuery();
     }
@@ -524,7 +530,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Toast.makeText(getContext(),"Cant download profile photo",Toast.LENGTH_LONG).show();
+//                Toast.makeText(getContext(),"Cant download profile photo",Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -538,7 +544,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.getValue() == null){
-                    Toast.makeText(getContext(),"Cant read from databaese",Toast.LENGTH_LONG).show();
+//                    Toast.makeText(getContext(),"Cant read from databaese",Toast.LENGTH_LONG).show();
                     init();
                     downloadPhotoFromFacebook();
                     if(dialog.isShowing()){
@@ -562,8 +568,9 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                     photo = user.getPhoto();
                     course = user.getCourse();
                     year = user.getAcademicYear();
+                    Toast.makeText(getContext(),"You have registered before. Retrieving Saved History",Toast.LENGTH_LONG).show();
+                    readFriendsFromFirebase(user.getId());
                     downloadProfilePhoto();
-
                 }
             }
 
@@ -624,6 +631,132 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
     public static Bitmap getImage(byte[] data){
         return BitmapFactory.decodeByteArray(data,0,data.length);
     }
+    private void readFriendsFromFirebase(String id) {
+
+        final DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child(RequestFriendListAdapter.FRIENDLIST).child(id);
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.getValue() != null ){
+                    final Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
+                    while (iterator.hasNext()) {
+                        final DataSnapshot next = iterator.next();
+                        SuccessFriendRequest request = next.getValue(SuccessFriendRequest.class);
+                        final String friendId = request.getFriendId();
+                        final String roomId = request.getRoomId();
+                        FirebaseDatabase.getInstance().getReference().child("users").child(friendId)
+                                .addValueEventListener(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        UserDetails userDetails = dataSnapshot.getValue(UserDetails.class);
+                                        executeQuery(userDetails, roomId);
+                                        downloadBitmap(userDetails);
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+
+                                    }
+                                });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
+    private void downloadBitmap(final UserDetails userDetails) {
+        StorageReference filepath = FirebaseStorage.getInstance().getReference().child("UserPhotos").child(userDetails.getId() + ".png");
+        String photo = filepath.getDownloadUrl().toString();
+        int ONE_MEGABYTE = 1024*1024;
+        filepath.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                Bitmap bitmap = AccountFragment.getImage(bytes);
+                saveImageToDatabase(userDetails,bitmap);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+//                Toast.makeText(getContext(),"Cant download profile photo",Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void executeQuery(UserDetails user,String roomId) {
+        ContentValues values = new ContentValues();
+        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        values.put(UpDatabaseHelper.ID_COLUMN,user.getId());
+        values.put(UpDatabaseHelper.FIRST_NAME_COLUMN,user.getFirstName());
+        values.put(UpDatabaseHelper.LAST_NAME_COLUMN,user.getLastName());
+        values.put(UpDatabaseHelper.GENDER_COLUMN,user.getGender());
+        values.put(UpDatabaseHelper.FACEBOOK_ID_COLUMN,user.getId());
+        values.put(UpDatabaseHelper.PROFILE_PHOTO_COLUMN,user.getPhoto());
+        values.put(UpDatabaseHelper.COURSE_COLUMN,user.getCourse());
+        values.put(UpDatabaseHelper.ACADEMIC_YEAR_COLUMN,user.getAcademicYear());
+        values.put(UpDatabaseHelper.ABOUT_ME_COLUMN,user.getAboutMe());
+        values.put(UpDatabaseHelper.DOB_COLUMN,user.getBirthday());
+        values.put(UpDatabaseHelper.PHONE_COLUMN,user.getPhoneNumber());
+        values.put(UpDatabaseHelper.VERIFIED_COLUMN,user.getIsVerified());
+        values.put(UpDatabaseHelper.AGE_COLUMN,user.getAge());
+        values.put(UpDatabaseHelper.INTEREST_1_COLUMN,user.getInterest1());
+        values.put(UpDatabaseHelper.INTEREST_2_COLUMN,user.getInterest2());
+        values.put(UpDatabaseHelper.INTEREST_3_COLUMN,user.getInterest3());
+        values.put(UpDatabaseHelper.TARGET_MALE_COLUMN,user.getTargetMale());
+        values.put(UpDatabaseHelper.TARGET_FEMALE_COLUMN,user.getTargetFemale());
+        values.put(UpDatabaseHelper.LAST_LOGIN_COLUMN,user.getLastLogin().toString());
+        db.insert(UpDatabaseHelper.USER_TABLE,null,values);
+
+        ContentValues newValues = new ContentValues();
+        newValues.put(UpDatabaseHelper.FRIEND_ID_COLUMN,user.getId());
+        newValues.put(UpDatabaseHelper.FIRST_NAME_COLUMN,user.getFirstName());
+        newValues.put(UpDatabaseHelper.LAST_NAME_COLUMN,user.getLastName());
+        newValues.put(UpDatabaseHelper.CHATROOM_ID_COLUMN,roomId);
+        db.insert(UpDatabaseHelper.FRIENDSHIP_TABLE,null,newValues);
+        db.close();
+    }
+    private void saveImageToDatabase(UserDetails user,Bitmap bitmap){
+        ContentValues values = new ContentValues();
+        values.put(UpDatabaseHelper.IMAGES_ID_COLUMN,user.getId());
+        values.put(UpDatabaseHelper.IMAGE_COLUMN, AccountFragment.getBytes(bitmap));
+        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        db.insert(UpDatabaseHelper.IMAGES_TABLE,null,values);
+        String fullName = user.getFirstName()+" "+user.getLastName();
+        db.close();
+    }
+    private class myTask extends AsyncTask<Cursor,Void,Void> {
+
+        @Override
+        protected Void doInBackground(Cursor... params) {
+            Cursor friendCursor = params[0];
+            friendCursor.moveToFirst();
+            for(int i=0;i<friendCursor.getCount();i++){
+
+                String id = friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.FRIEND_ID_COLUMN));
+                String firstName = friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.FIRST_NAME_COLUMN));
+                String lastName =  friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.LAST_NAME_COLUMN));
+                String fullName = firstName +" "+lastName;
+                String roomId = friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.CHATROOM_ID_COLUMN));
+                FriendListItem item = new FriendListItem(fullName,id,bitmap);
+
+                friendCursor.moveToNext();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+
+        }
+    }
+
     //    private void retrieveDataFromDatabase() {
 //        databaseHelper = new UpDatabaseHelper(getContext());
 //        SQLiteDatabase readableDatabase = databaseHelper.getReadableDatabase();

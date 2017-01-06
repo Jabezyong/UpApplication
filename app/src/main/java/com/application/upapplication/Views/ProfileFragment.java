@@ -2,6 +2,7 @@ package com.application.upapplication.Views;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Switch;
@@ -19,6 +21,7 @@ import android.widget.TextView;
 import com.application.upapplication.Database.UpDatabaseHelper;
 import com.application.upapplication.Model.UserDetails;
 import com.application.upapplication.R;
+import com.facebook.login.LoginManager;
 
 
 /**
@@ -31,6 +34,7 @@ public class ProfileFragment extends Fragment {
     private ArrayAdapter<CharSequence> yearAdapter,coursesAdapter,songAdapter,sportAdapter,foodAdapter;
     private Spinner sportSpinner,foodSpinner,songSpinner,courseSpinner,yearSpinner;
     private Switch switchMale,switchFemale;
+    private Button btnLogOut;
     String food,song,sport,course,firstName,lastName,gender,birthday,aboutMe,fbId,photo,phone,id;
     int year,age,targetMale,targetFemale,verified;
     static int yes = 1;
@@ -92,6 +96,14 @@ public class ProfileFragment extends Fragment {
         songSpinner = (Spinner) view.findViewById(R.id.spinnerSong);
         sportSpinner = (Spinner) view.findViewById(R.id.spinnerSport);
         foodSpinner = (Spinner) view.findViewById(R.id.spinnerFood);
+
+        btnLogOut = (Button) view.findViewById(R.id.btnLogout);
+        btnLogOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                logOut();
+            }
+        });
         initAdapter();
     }
     private void initAdapter(){
@@ -177,5 +189,12 @@ public class ProfileFragment extends Fragment {
         byte[] hello = data;
         Bitmap b = BitmapFactory.decodeByteArray(data,0,data.length);
         return b;
+    }
+
+    public void logOut(){
+        LoginManager.getInstance().logOut();
+        getActivity().finish();
+        Intent intent = new Intent(this.getContext(),MainActivity.class);
+        startActivity(intent);
     }
 }

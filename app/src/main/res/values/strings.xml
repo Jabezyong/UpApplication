@@ -14,6 +14,7 @@
     <string name="search">Search</string>
     <string name="friend_request">Friend Request</string>
     <string name="chat">Chat</string>
+    <string name="logout">Log Out</string>
     <string-array name="year">
         <item>Academic Year</item>
         <item>1</item>
@@ -90,4 +91,5 @@
         <item>Mobile</item>
         <item>Mobile</item>
     </string-array>
+    <string name="title_activity_basic">BasicActivity</string>
 </resources>

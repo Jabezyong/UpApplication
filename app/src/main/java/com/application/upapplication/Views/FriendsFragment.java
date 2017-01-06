@@ -39,6 +39,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static android.R.attr.bitmap;
@@ -119,23 +120,27 @@ public class FriendsFragment extends Fragment {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.getValue() != null ){
-                    SuccessFriendRequest request = dataSnapshot.getValue(SuccessFriendRequest.class);
-                    final String friendId = request.getFriendId();
-                    final String roomId = request.getRoomId();
-                    FirebaseDatabase.getInstance().getReference().child("users").child(friendId)
-                            .addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    UserDetails userDetails = dataSnapshot.getValue(UserDetails.class);
-                                    executeQuery(userDetails, roomId);
-                                    downloadBitmap(userDetails);
-                                }
+                    final Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
+                    while (iterator.hasNext()) {
+                        final DataSnapshot next = iterator.next();
+                        SuccessFriendRequest request = next.getValue(SuccessFriendRequest.class);
+                        final String friendId = request.getFriendId();
+                        final String roomId = request.getRoomId();
+                        FirebaseDatabase.getInstance().getReference().child("users").child(friendId)
+                                .addValueEventListener(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        UserDetails userDetails = dataSnapshot.getValue(UserDetails.class);
+                                        executeQuery(userDetails, roomId);
+                                        downloadBitmap(userDetails);
+                                    }
 
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
 
-                                }
-                            });
+                                    }
+                                });
+                    }
                 }
             }
 
@@ -160,7 +165,7 @@ public class FriendsFragment extends Fragment {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Toast.makeText(getContext(),"Cant download profile photo",Toast.LENGTH_LONG).show();
+//                Toast.makeText(getContext(),"Cant download profile photo",Toast.LENGTH_LONG).show();
             }
         });
     }

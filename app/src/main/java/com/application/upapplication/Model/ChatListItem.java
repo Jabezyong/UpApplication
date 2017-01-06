@@ -1,22 +1,49 @@
 package com.application.upapplication.Model;
 
+import android.graphics.Bitmap;
+
+import java.util.Date;
+
 /**
  * Created by user on 12/23/2016.
  */
 
 public class ChatListItem {
     private String friend_name;
-    private int profile_pic_id;
+    private Bitmap profile_pic;
     private String lastMsg;
-    private String time;
-
-    public ChatListItem(String friend_name, int profile_pic_id, String lastMsg, String time) {
-        this.friend_name = friend_name;
-        this.profile_pic_id = profile_pic_id;
-        this.lastMsg = lastMsg;
-        this.time = time;
+    private Date time;
+    private String chatroomId;
+    private String profile_id;
+    private String position ;
+    public ChatListItem() {
     }
 
+
+
+    public ChatListItem(String profile_id,String friend_name, Bitmap profile_pic, String lastMsg, String chatroomId) {
+        this.profile_id = profile_id;
+        this.friend_name = friend_name;
+        this.profile_pic = profile_pic;
+        this.lastMsg = lastMsg;
+        this.chatroomId = chatroomId;
+    }
+
+    public String getProfile_id() {
+        return profile_id;
+    }
+
+    public void setProfile_id(String profile_id) {
+        this.profile_id = profile_id;
+    }
+
+    public String getChatroomId() {
+        return chatroomId;
+    }
+
+    public void setChatroomId(String chatroomId) {
+        this.chatroomId = chatroomId;
+    }
     public String getFriend_name() {
         return friend_name;
     }
@@ -25,12 +52,12 @@ public class ChatListItem {
         this.friend_name = friend_name;
     }
 
-    public int getProfile_pic_id() {
-        return profile_pic_id;
+    public Bitmap getProfile_pic() {
+        return profile_pic;
     }
 
-    public void setProfile_pic_id(int profile_pic_id) {
-        this.profile_pic_id = profile_pic_id;
+    public void setProfile_pic(Bitmap profile_pic) {
+        this.profile_pic = profile_pic;
     }
 
     public String getLastMsg() {
@@ -41,11 +68,19 @@ public class ChatListItem {
         this.lastMsg = lastMsg;
     }
 
-    public String getTime() {
+    public Date getTime() {
         return time;
     }
 
-    public void setTime(String time) {
+    public void setTime(Date time) {
         this.time = time;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
     }
 }

@@ -39,7 +39,7 @@ public class SmsFragment extends Fragment {
         int readContacts = checkSelfPermission(getContext(), permission.READ_CONTACTS);
         checkPermission();
         if(readContacts != PackageManager.PERMISSION_GRANTED){
-            Toast.makeText(getContext(),"Cannot read contacts",Toast.LENGTH_LONG).show();
+//            Toast.makeText(getContext(),"Cannot read contacts",Toast.LENGTH_LONG).show();
         }else {
             SMSSDK.initSDK(getContext(), appKey, appSecret);
             final RegisterPage registerPage = new RegisterPage();
@@ -49,7 +49,7 @@ public class SmsFragment extends Fragment {
                         HashMap<String, Object> phoneMap = (HashMap<String, Object>) data;
                         String country = (String) phoneMap.get("country");
                         String phone = (String) phoneMap.get("phone");
-                        Toast.makeText(getContext(), phone, Toast.LENGTH_LONG).show();
+//                        Toast.makeText(getContext(), phone, Toast.LENGTH_LONG).show();
                         registerUser(phone);
                     }
                 }

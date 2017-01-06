@@ -24,10 +24,10 @@ import java.util.List;
  * Created by user on 12/30/2016.
  */
 
-public class FriendListAdapter extends BaseAdapter {
+public class FriendListAdapter extends BaseAdapter implements View.OnClickListener{
     private Context mContext;
     List<FriendListItem> friends;
-    FriendListItem item;
+
     FirebaseStorage firebase;
     public FriendListAdapter(Context mContext, List<FriendListItem> friends) {
         this.mContext = mContext;
@@ -64,7 +64,7 @@ public class FriendListAdapter extends BaseAdapter {
         }else{
             viewHolder = (ViewHolder) convertView.getTag();
         }
-        item =  friends.get(position);
+        final FriendListItem item =  friends.get(position);
         viewHolder.tvFriend_name.setText(item.getFriend_name());
         viewHolder.ivProfile_pic.setImageBitmap(item.getBitmap());
         viewHolder.btnChat.setOnClickListener(new View.OnClickListener() {
@@ -74,11 +74,17 @@ public class FriendListAdapter extends BaseAdapter {
                 Bundle bundle = new Bundle();
                 bundle.putString(ChatActivity.CHATROOMID,item.getRoomId());
                 bundle.putString(ChatActivity.FRIENDID,item.getProfile_id());
+                bundle.putString(ChatActivity.NAME,item.getFriend_name());
                 intent.putExtra(ChatActivity.BUNDLE,bundle);
                 mContext.startActivity(intent);
             }
         });
         return convertView;
+    }
+
+    @Override
+    public void onClick(View v) {
+
     }
 
     private class ViewHolder{

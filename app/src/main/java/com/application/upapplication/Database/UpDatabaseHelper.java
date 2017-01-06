@@ -15,7 +15,7 @@ import java.io.File;
  */
 
 public class UpDatabaseHelper extends SQLiteOpenHelper {
-        private static final String DATABASE_NAME = "UPDATABASE.db";
+        public static final String DATABASE_NAME = "UPDATABASE.db";
         private static final int DATABASE_VERSION = 1;
 
         public static final String USER_TABLE = "Users";
@@ -213,22 +213,26 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
                 }else{
                     return null;
                 }
-                String firstName = cursor.getString(cursor.getColumnIndexOrThrow(FIRST_NAME_COLUMN));
-                String lastName = cursor.getString(cursor.getColumnIndexOrThrow(LAST_NAME_COLUMN));
-                String gender = cursor.getString(cursor.getColumnIndexOrThrow(GENDER_COLUMN));
-                String dob = cursor.getString(cursor.getColumnIndexOrThrow(DOB_COLUMN));
-                String course = cursor.getString(cursor.getColumnIndexOrThrow(COURSE_COLUMN));
-                int year = cursor.getInt(cursor.getColumnIndexOrThrow(ACADEMIC_YEAR_COLUMN));
-                String aboutMe = cursor.getString(cursor.getColumnIndexOrThrow(ABOUT_ME_COLUMN));
-                String phone = cursor.getString(cursor.getColumnIndexOrThrow(PHONE_COLUMN));
-                String song = cursor.getString(cursor.getColumnIndexOrThrow(INTEREST_1_COLUMN));
-                String sport = cursor.getString(cursor.getColumnIndexOrThrow(INTEREST_2_COLUMN));
-                String food = cursor.getString(cursor.getColumnIndexOrThrow(INTEREST_3_COLUMN));
-                int targetMale = cursor.getInt(cursor.getColumnIndexOrThrow(TARGET_MALE_COLUMN));
-                int targetFemale = cursor.getInt(cursor.getColumnIndexOrThrow(TARGET_FEMALE_COLUMN));
-                UserDetails user = new UserDetails(firstName,lastName,gender,dob,phone,course,year,aboutMe,song,sport,food,targetMale,targetFemale);
-                db.close();
-                return user;
+                if(cursor.getCount()>0) {
+                    String firstName = cursor.getString(cursor.getColumnIndexOrThrow(FIRST_NAME_COLUMN));
+                    String lastName = cursor.getString(cursor.getColumnIndexOrThrow(LAST_NAME_COLUMN));
+                    String gender = cursor.getString(cursor.getColumnIndexOrThrow(GENDER_COLUMN));
+                    String dob = cursor.getString(cursor.getColumnIndexOrThrow(DOB_COLUMN));
+                    String course = cursor.getString(cursor.getColumnIndexOrThrow(COURSE_COLUMN));
+                    int year = cursor.getInt(cursor.getColumnIndexOrThrow(ACADEMIC_YEAR_COLUMN));
+                    String aboutMe = cursor.getString(cursor.getColumnIndexOrThrow(ABOUT_ME_COLUMN));
+                    String phone = cursor.getString(cursor.getColumnIndexOrThrow(PHONE_COLUMN));
+                    String song = cursor.getString(cursor.getColumnIndexOrThrow(INTEREST_1_COLUMN));
+                    String sport = cursor.getString(cursor.getColumnIndexOrThrow(INTEREST_2_COLUMN));
+                    String food = cursor.getString(cursor.getColumnIndexOrThrow(INTEREST_3_COLUMN));
+                    int targetMale = cursor.getInt(cursor.getColumnIndexOrThrow(TARGET_MALE_COLUMN));
+                    int targetFemale = cursor.getInt(cursor.getColumnIndexOrThrow(TARGET_FEMALE_COLUMN));
+                    UserDetails user = new UserDetails(firstName, lastName, gender, dob, phone, course, year, aboutMe, song, sport, food, targetMale, targetFemale);
+                    db.close();
+                    return user;
+                }else{
+                    return null;
+                }
         }
 
         public byte[] getProfilePic(String id){
