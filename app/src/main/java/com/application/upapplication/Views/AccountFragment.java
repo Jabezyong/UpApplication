@@ -20,6 +20,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,6 +49,9 @@ import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.FaceDetector;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -60,7 +64,9 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
@@ -70,41 +76,51 @@ import cn.smssdk.EventHandler;
 import cn.smssdk.SMSSDK;
 import cn.smssdk.gui.RegisterPage;
 
+import static android.app.Activity.RESULT_OK;
+
+
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class AccountFragment extends Fragment implements AdapterView.OnItemSelectedListener{
+public class AccountFragment extends Fragment implements AdapterView.OnItemSelectedListener {
     private String APPKEY = "125fe10cbed00";
     private String APPSECRET = "bc73c2185d77786c192a063f63c62241";
     private StorageReference mStorage;
     private StorageReference filepath;
     ValueEventListener eventListener;
     FirebaseAuth mAuth;
-    Button logout,btnNext;
+    UserDetails user;
+    Button logout, btnNext;
     View view;
+    Button btnEdit;
     LayoutInflater inflater;
     ViewGroup container;
-    TextView textViewShowName,textViewShowGender,textViewShowBirthday;
+    TextView textViewShowName, textViewShowGender, textViewShowBirthday;
     EditText etAbout;
     ImageView imageViewProfilePicture;
-    private ArrayAdapter<CharSequence> yearAdapter,coursesAdapter,songAdapter,sportAdapter,foodAdapter;
-    private Spinner sportSpinner,foodSpinner,songSpinner,courseSpinner,yearSpinner;
-    private Switch male,female;
-    private Profile FACEBOOK_PROFILE ;
-    String food,song,sport,course,firstName,lastName,gender,birthday,aboutMe,fbId,photo,phone;
-    int year,age,targetMale,targetFemale,verified;
+    private ArrayAdapter<CharSequence> yearAdapter, coursesAdapter, songAdapter, sportAdapter, foodAdapter;
+    private Spinner sportSpinner, foodSpinner, songSpinner, courseSpinner, yearSpinner;
+    private Switch male, female;
+    private Profile FACEBOOK_PROFILE;
+    String food, song, sport, course, firstName, lastName, gender, birthday, aboutMe, fbId, photo, phone;
+    int year, age, targetMale, targetFemale, verified;
     boolean found = false;
     Date lastLogin;
     private Bitmap bitmap;
     Bundle bundle;
     ProgressDialog dialog;
     byte[] bytesFromFirebase;
+    public static final int IMAGE_GALLERY_REQUEST = 20;
+    private FaceDetector faceDetector;
+    private int friendCount ;
+    private int friendDataDownloadedCount ;
     public AccountFragment() {
 
         // Required empty public constructor
     }
-    private void init(){
+
+    private void init() {
         etAbout = (EditText) view.findViewById(R.id.editTextAboutMe);
         textViewShowName = (TextView) view.findViewById(R.id.textViewShowName);
         textViewShowGender = (TextView) view.findViewById(R.id.textViewShowGender);
@@ -119,6 +135,17 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         foodSpinner = (Spinner) view.findViewById(R.id.spinnerFood);
         yearSpinner = (Spinner) view.findViewById(R.id.spinnerYear);
         courseSpinner = (Spinner) view.findViewById(R.id.spinnerCourse);
+        btnEdit = (Button) view.findViewById(R.id.btnEdit);
+        btnEdit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                faceDetector = new FaceDetector.Builder(getActivity().getApplicationContext()).build();
+                if (!faceDetector.isOperational()) {
+                    Toast.makeText(getActivity(), "Face detector dependencies are not yet available.", Toast.LENGTH_LONG).show();
+                }
+                changeProfilePicture();
+            }
+        });
         userInput();
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -138,54 +165,53 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
     }
 
 
-
-    private void initSpinners(){
-        foodAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.food)){
+    private void initSpinners() {
+        foodAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, getResources().getTextArray(R.array.food)) {
             @Override
             public boolean isEnabled(int position) {
-                if(position == 0){
+                if (position == 0) {
                     return false;
-                }else{
+                } else {
                     return true;
                 }
             }
         };
-        sportAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.sports)){
+        sportAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, getResources().getTextArray(R.array.sports)) {
             @Override
             public boolean isEnabled(int position) {
-                if(position == 0){
+                if (position == 0) {
                     return false;
-                }else{
+                } else {
                     return true;
                 }
             }
         };
-        songAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.songs)){
+        songAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, getResources().getTextArray(R.array.songs)) {
             @Override
             public boolean isEnabled(int position) {
-                if(position == 0){
+                if (position == 0) {
                     return false;
-                }else{
+                } else {
                     return true;
                 }
             }
         };
-        coursesAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.courses)){
+        coursesAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, getResources().getTextArray(R.array.courses)) {
             @Override
             public boolean isEnabled(int position) {
-                if(position == 0){
+                if (position == 0) {
                     return false;
-                }else{
+                } else {
                     return true;
                 }
             }
         };
-        yearAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.year)){
+        yearAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, getResources().getTextArray(R.array.year)) {
             @Override
             public boolean isEnabled(int position) {
-                if(position == 0){
+                if (position == 0) {
                     return false;
-                }else{
+                } else {
                     return true;
                 }
             }
@@ -217,27 +243,29 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
     public View onCreateView(LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        dialog  = new ProgressDialog(getContext());
+        dialog = new ProgressDialog(getContext());
         dialog.setMessage("Loading");
         dialog.setCancelable(false);
         dialog.show();
         bundle = getActivity().getIntent().getBundleExtra(LoginFragment.bundleTAG);
         this.view = inflater.inflate(R.layout.fragment_account, container, false);
-        this.inflater  = inflater;
+        this.inflater = inflater;
         this.container = container;
-        if(bundle != null){
+        if (bundle != null) {
             fbId = bundle.getString("id");
-            SharedPreferences preferences = getContext().getSharedPreferences(MainActivity.UPPREFERENCE,Context.MODE_PRIVATE);
+            SharedPreferences preferences = getContext().getSharedPreferences(MainActivity.UPPREFERENCE, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
-            editor.putString(getString(R.string.ownerid),fbId);
+            editor.putString(getString(R.string.ownerid), fbId);
             editor.commit();
-            retrieveDataFromDatabase(fbId);
-        }else{
+            mStorage = FirebaseStorage.getInstance().getReference();
+            retrieveDataFromFirebase(fbId);
+        } else {
             logOut();
         }
 
         return this.view;
     }
+
     private void userInput() {
 
         firstName = bundle.getString("first_name");
@@ -250,9 +278,10 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
 
         initSpinners();
     }
+
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        if(position != 0) {
+        if (position != 0) {
             switch (parent.getId()) {
                 case R.id.spinnerFood:
                     food = (String) foodSpinner.getSelectedItem();
@@ -267,7 +296,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                     course = (String) courseSpinner.getSelectedItem();
                     break;
                 case R.id.spinnerYear:
-                    year = Integer.valueOf((String)yearSpinner.getSelectedItem());
+                    year = Integer.valueOf((String) yearSpinner.getSelectedItem());
                     break;
                 default:
                     break;
@@ -276,17 +305,16 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
     }
 
 
-
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
 
     }
 
 
-    private void logOut(){
+    private void logOut() {
         LoginManager.getInstance().logOut();
         getActivity().finish();
-        Intent intent = new Intent(this.getContext(),MainActivity.class);
+        Intent intent = new Intent(this.getContext(), MainActivity.class);
         startActivity(intent);
     }
 
@@ -316,13 +344,13 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         if (!male.isPressed() && !female.isPressed()) {
             msg += "Please Select Gender of target\n";
         }
-        if(birthday == null){
+        if (birthday == null) {
 
         }
 
 
         if (!check) {
-            if(dialog.isShowing())
+            if (dialog.isShowing())
                 dialog.dismiss();
             AlertDialog.Builder builder =
                     new AlertDialog.Builder(getContext());
@@ -339,82 +367,52 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
             AlertDialog alert = builder.create();
             alert.show();
         } else {
-            if(!found) {
+            if (!found) {
                 aboutMe = etAbout.getText().toString();
-                if(male.isChecked()){
+                if (male.isChecked()) {
                     targetMale = 1;
-                }else{
+                } else {
                     targetMale = 0;
                 }
 
-                if(female.isChecked()){
+                if (female.isChecked()) {
                     targetFemale = 1;
-                }else{
+                } else {
                     targetFemale = 0;
                 }
             }
             verifySms();
         }
     }
+
     private void saving() {
 
-            if (birthday != null) {
-                String[] separated = birthday.split("/");
-                age = 2017- Integer.valueOf(separated[2]);
-            } else {
-                age = 20;
-            }
-            lastLogin = new Date();
-
-//            Toast.makeText(getContext(), lastLogin.toString(), Toast.LENGTH_LONG).show();
-            saveImageToDatabase();
-            executeQuery();
-    }
-    private void executeQuery(){
-        ContentValues values = new ContentValues();
-        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
-        SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        values.put(UpDatabaseHelper.ID_COLUMN,fbId);
-        values.put(UpDatabaseHelper.FIRST_NAME_COLUMN,firstName);
-        values.put(UpDatabaseHelper.LAST_NAME_COLUMN,lastName);
-        values.put(UpDatabaseHelper.GENDER_COLUMN,gender);
-        values.put(UpDatabaseHelper.FACEBOOK_ID_COLUMN,fbId);
-        values.put(UpDatabaseHelper.PROFILE_PHOTO_COLUMN,photo);
-        values.put(UpDatabaseHelper.COURSE_COLUMN,course);
-        values.put(UpDatabaseHelper.ACADEMIC_YEAR_COLUMN,year);
-        values.put(UpDatabaseHelper.ABOUT_ME_COLUMN,aboutMe);
-        values.put(UpDatabaseHelper.DOB_COLUMN,birthday);
-        values.put(UpDatabaseHelper.PHONE_COLUMN,phone);
-        values.put(UpDatabaseHelper.VERIFIED_COLUMN,verified);
-        values.put(UpDatabaseHelper.AGE_COLUMN,age);
-        values.put(UpDatabaseHelper.INTEREST_1_COLUMN,song);
-        values.put(UpDatabaseHelper.INTEREST_2_COLUMN,sport);
-        values.put(UpDatabaseHelper.INTEREST_3_COLUMN,food);
-        values.put(UpDatabaseHelper.TARGET_MALE_COLUMN,targetMale);
-        values.put(UpDatabaseHelper.TARGET_FEMALE_COLUMN,targetFemale);
-        values.put(UpDatabaseHelper.LAST_LOGIN_COLUMN,lastLogin.toString());
-        db.insert(UpDatabaseHelper.USER_TABLE,null,values);
-        db.close();
-        if(!found) {
-            initFireBase();
-            saveToFireBase();
-            uploadProfilePhoto();
-            Toast.makeText(getContext(),"Saved to firebase",Toast.LENGTH_LONG).show();
+        if (birthday != null) {
+            String[] separated = birthday.split("/");
+            age = 2017 - Integer.valueOf(separated[2]);
+        } else {
+            age = 20;
         }
-        startNewActivity();
+        lastLogin = new Date();
 
+        if (!found) {
+            saveImageToDatabase();
+        }
+        executeQuery();
     }
-    private void startNewActivity(){
-        if(dialog.isShowing()){
+
+
+
+    private void startNewActivity() {
+        if (dialog.isShowing()) {
             dialog.dismiss();
         }
-//        getActivity().finish();
-        Intent intent = new Intent(getContext(),MainActivity.class);
+        Intent intent = new Intent(getContext(), MainActivity.class);
         startActivity(intent);
     }
 
     private void verifySms() {
-        if(!found) {
+        if (!found) {
             SMSSDK.initSDK(getContext(), APPKEY, APPSECRET);
 //        phone = "0163582906";
 
@@ -437,22 +435,8 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         }
     }
 
-    private void initFireBase(){
-        mStorage = FirebaseStorage.getInstance().getReference();
-        filepath = mStorage.child("UserPhotos").child(fbId+".png");
 
-    }
-    private void registerUser(String phone) {
-        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
-        SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        String id = Profile.getCurrentProfile().getId();
-        ContentValues values = new ContentValues();
-        values.put(UpDatabaseHelper.PHONE_COLUMN,phone);
-        values.put(UpDatabaseHelper.VERIFIED_COLUMN,1);
 
-        db.update(UpDatabaseHelper.USER_TABLE,values,
-                UpDatabaseHelper.FACEBOOK_ID_COLUMN+" = ?",new String[]{id});
-    }
     private File saveBitmap() {
         imageViewProfilePicture.setDrawingCacheEnabled(true);
         imageViewProfilePicture.buildDrawingCache();
@@ -460,100 +444,82 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         String extStorageDirectory = Environment.getExternalStorageDirectory()
                 .toString();
         OutputStream outStream = null;
-        File file = new File(extStorageDirectory,fbId+".png");
-        if(file.exists()){
+        File file = new File(extStorageDirectory, fbId + ".png");
+        if (file.exists()) {
             file.delete();
-            file = new File(extStorageDirectory,fbId+".png");
-            Log.e("File Exists",""+file+",Bitmap= "+bitmap);
-        }else{
+            file = new File(extStorageDirectory, fbId + ".png");
+            Log.e("File Exists", "" + file + ",Bitmap= " + bitmap);
+        } else {
             try {
                 outStream = new FileOutputStream(file);
-                bitmap.compress(Bitmap.CompressFormat.PNG,100,outStream);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream);
                 outStream.flush();
                 outStream.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Log.e("File",""+file);
+            Log.e("File", "" + file);
         }
         return file;
     }
+
     private void saveToFireBase() {
         FirebaseDatabase firebase = FirebaseDatabase.getInstance();
         DatabaseReference databaseReference = firebase.getReference();
-        UserDetails newUser = new UserDetails(fbId,firstName,lastName,gender,birthday,phone,course,year,aboutMe,age,song,sport,food,1,targetMale,targetFemale,lastLogin,photo);
+        UserDetails newUser = new UserDetails(fbId, firstName, lastName, gender, birthday, phone, course, year, aboutMe, age, song, sport, food, 1, targetMale, targetFemale, lastLogin, photo);
         databaseReference.child("users").child(fbId).setValue(newUser);
+        uploadProfilePhoto();
     }
+
     private void uploadProfilePhoto() {
 
 
-        if(bitmap == null){
+        filepath = mStorage.child("UserPhotos").child(fbId + ".png");
+        if (bitmap == null) {
             imageViewProfilePicture.setDrawingCacheEnabled(true);
             imageViewProfilePicture.buildDrawingCache();
-            bitmap = imageViewProfilePicture .getDrawingCache();
+            bitmap = imageViewProfilePicture.getDrawingCache();
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG,100,baos);
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
         byte[] data = baos.toByteArray();
         UploadTask uploadTask = filepath.putBytes(data);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Toast.makeText(getContext(),"Not able to upload photo",Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "Not able to upload photo", Toast.LENGTH_LONG).show();
             }
         });
         uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                photo  = taskSnapshot.getDownloadUrl().toString();
-//                Toast.makeText(getContext(),"Photo= "+photo,Toast.LENGTH_LONG).show();
-                Log.e("Photo url",photo);
+                photo = taskSnapshot.getDownloadUrl().toString();
+                Log.e("Photo url", photo);
                 startNewActivity();
             }
         });
     }
-    private void downloadProfilePhoto(){
-        mStorage = FirebaseStorage.getInstance().getReference();
-        filepath = mStorage.child("UserPhotos").child(fbId+".png");
-        photo = filepath.getDownloadUrl().toString();
-        int ONE_MEGABYTE = 1024*1024;
-        filepath.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-            @Override
-            public void onSuccess(byte[] bytes) {
-//                bytesFromFirebase =bytes;
-                bitmap = getImage(bytes);
-//                imageViewProfilePicture = (ImageView) view.findViewById(R.id.imageViewProfilePicture);
-//                imageViewProfilePicture
-//                saveImageToDatabase();
-                saving();
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-//                Toast.makeText(getContext(),"Cant download profile photo",Toast.LENGTH_LONG).show();
-            }
-        });
-    }
 
 
 
-    private void retrieveDataFromDatabase(String id){
-         final DatabaseReference mDatabase;
+
+    private void retrieveDataFromFirebase(String id) {
+        final DatabaseReference mDatabase;
         mDatabase = FirebaseDatabase.getInstance().getReference().child("users").child(id);
-        eventListener= new ValueEventListener(){
+        eventListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue() == null){
+                if (dataSnapshot.getValue() == null) {
 //                    Toast.makeText(getContext(),"Cant read from databaese",Toast.LENGTH_LONG).show();
                     init();
                     downloadPhotoFromFacebook();
-                    if(dialog.isShowing()){
+                    if (dialog.isShowing()) {
                         dialog.dismiss();
                     }
                     mDatabase.removeEventListener(eventListener);
-                }else{
+                } else {
                     found = true;
-                    UserDetails user = dataSnapshot.getValue(UserDetails.class);
+                    user = dataSnapshot.getValue(UserDetails.class);
                     birthday = user.getBirthday();
                     firstName = user.getFirstName();
                     lastName = user.getLastName();
@@ -568,9 +534,11 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                     photo = user.getPhoto();
                     course = user.getCourse();
                     year = user.getAcademicYear();
-                    Toast.makeText(getContext(),"You have registered before. Retrieving Saved History",Toast.LENGTH_LONG).show();
-                    readFriendsFromFirebase(user.getId());
+                    Toast.makeText(getContext(), "You have registered before. Retrieving Saved History", Toast.LENGTH_LONG).show();
+
                     downloadProfilePhoto();
+
+                    readFriendsFromFirebase(user.getId());
                 }
             }
 
@@ -582,62 +550,13 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         mDatabase.addListenerForSingleValueEvent(eventListener);
     }
 
-
-
-    private void downloadPhotoFromFacebook(){
-        FacebookSdk.sdkInitialize(getContext());
-        FACEBOOK_PROFILE = Profile.getCurrentProfile();
-        if (FACEBOOK_PROFILE != null) {
-            Uri link = FACEBOOK_PROFILE.getProfilePictureUri(400, 400);
-            String url = link.toString();
-            ImageRequest request = new ImageRequest(url, new Response.Listener<Bitmap>() {
-                @Override
-                public void onResponse(Bitmap response) {
-                    imageViewProfilePicture.setImageBitmap(response);
-                    saveBitmap();
-                    if(dialog.isShowing())
-                        dialog.dismiss();
-                }
-            }, 400, 400, Bitmap.Config.RGB_565, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Toast.makeText(getContext(), "Unable to get Profile Picture", Toast.LENGTH_LONG).show();
-                }
-            });
-            if (request != null) {
-                VolleyApplication.getHttpQueues().add(request);
-            } else {
-                Toast.makeText(getContext(), "Unable to get Profile Picture", Toast.LENGTH_LONG).show();
-            }
-
-            Log.i(getActivity().getPackageName(), link + "");
-        }
-    }
-    private void saveImageToDatabase(){
-        ContentValues values = new ContentValues();
-        values.put(UpDatabaseHelper.IMAGES_ID_COLUMN,fbId);
-        values.put(UpDatabaseHelper.IMAGE_COLUMN, getBytes(bitmap));
-        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
-        SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        db.insert(UpDatabaseHelper.IMAGES_TABLE,null,values);
-    }
-
-    public static byte[] getBytes(Bitmap bitmap){
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
-        return stream.toByteArray();
-    }
-
-    public static Bitmap getImage(byte[] data){
-        return BitmapFactory.decodeByteArray(data,0,data.length);
-    }
     private void readFriendsFromFirebase(String id) {
 
         final DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child(RequestFriendListAdapter.FRIENDLIST).child(id);
-        reference.addValueEventListener(new ValueEventListener() {
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue() != null ){
+                if (dataSnapshot.getValue() != null) {
                     final Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
                     while (iterator.hasNext()) {
                         final DataSnapshot next = iterator.next();
@@ -645,12 +564,13 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                         final String friendId = request.getFriendId();
                         final String roomId = request.getRoomId();
                         FirebaseDatabase.getInstance().getReference().child("users").child(friendId)
-                                .addValueEventListener(new ValueEventListener() {
+                                .addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
+                                        friendCount++;
                                         UserDetails userDetails = dataSnapshot.getValue(UserDetails.class);
                                         executeQuery(userDetails, roomId);
-                                        downloadBitmap(userDetails);
+                                        downloadFriendsPhoto(userDetails);
                                     }
 
                                     @Override
@@ -669,233 +589,229 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         });
 
     }
+    private void downloadPhotoFromFacebook() {
+        FacebookSdk.sdkInitialize(getContext());
+        FACEBOOK_PROFILE = Profile.getCurrentProfile();
+        if (FACEBOOK_PROFILE != null) {
+            Uri link = FACEBOOK_PROFILE.getProfilePictureUri(400, 400);
+            String url = link.toString();
+            ImageRequest request = new ImageRequest(url, new Response.Listener<Bitmap>() {
+                @Override
+                public void onResponse(Bitmap response) {
+                    imageViewProfilePicture.setImageBitmap(response);
+                    saveBitmap();
+                    if (dialog.isShowing())
+                        dialog.dismiss();
+                }
+            }, 400, 400, Bitmap.Config.RGB_565, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(getContext(), "Unable to get Profile Picture", Toast.LENGTH_LONG).show();
+                }
+            });
+            if (request != null) {
+                VolleyApplication.getHttpQueues().add(request);
+            } else {
+                Toast.makeText(getContext(), "Unable to get Profile Picture", Toast.LENGTH_LONG).show();
+            }
 
-    private void downloadBitmap(final UserDetails userDetails) {
-        StorageReference filepath = FirebaseStorage.getInstance().getReference().child("UserPhotos").child(userDetails.getId() + ".png");
-        String photo = filepath.getDownloadUrl().toString();
-        int ONE_MEGABYTE = 1024*1024;
+            Log.i(getActivity().getPackageName(), link + "");
+        }
+    }
+    private void downloadProfilePhoto() {
+        mStorage = FirebaseStorage.getInstance().getReference();
+        filepath = mStorage.child("UserPhotos").child(fbId + ".png");
+        photo = filepath.getDownloadUrl().toString();
+        int ONE_MEGABYTE = 1024 * 1024;
         filepath.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override
             public void onSuccess(byte[] bytes) {
-                Bitmap bitmap = AccountFragment.getImage(bytes);
-                saveImageToDatabase(userDetails,bitmap);
+                bitmap = getImage(bytes);
+                saveImageToDatabase(user, bitmap);
+                saving();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-//                Toast.makeText(getContext(),"Cant download profile photo",Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    private void downloadFriendsPhoto(final UserDetails userDetails) {
+        StorageReference filepath = FirebaseStorage.getInstance().getReference().child("UserPhotos").child(userDetails.getId() + ".png");
+            int ONE_MEGABYTE = 1024 * 1024;
+            filepath.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                @Override
+                public void onSuccess(byte[] bytes) {
+                    Bitmap bitmap = AccountFragment.getImage(bytes);
+                    saveImageToDatabase(userDetails, bitmap);
+                }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
             }
         });
     }
 
-    private void executeQuery(UserDetails user,String roomId) {
+    private void executeQuery() {
         ContentValues values = new ContentValues();
         UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        values.put(UpDatabaseHelper.ID_COLUMN,user.getId());
-        values.put(UpDatabaseHelper.FIRST_NAME_COLUMN,user.getFirstName());
-        values.put(UpDatabaseHelper.LAST_NAME_COLUMN,user.getLastName());
-        values.put(UpDatabaseHelper.GENDER_COLUMN,user.getGender());
-        values.put(UpDatabaseHelper.FACEBOOK_ID_COLUMN,user.getId());
-        values.put(UpDatabaseHelper.PROFILE_PHOTO_COLUMN,user.getPhoto());
-        values.put(UpDatabaseHelper.COURSE_COLUMN,user.getCourse());
-        values.put(UpDatabaseHelper.ACADEMIC_YEAR_COLUMN,user.getAcademicYear());
-        values.put(UpDatabaseHelper.ABOUT_ME_COLUMN,user.getAboutMe());
-        values.put(UpDatabaseHelper.DOB_COLUMN,user.getBirthday());
-        values.put(UpDatabaseHelper.PHONE_COLUMN,user.getPhoneNumber());
-        values.put(UpDatabaseHelper.VERIFIED_COLUMN,user.getIsVerified());
-        values.put(UpDatabaseHelper.AGE_COLUMN,user.getAge());
-        values.put(UpDatabaseHelper.INTEREST_1_COLUMN,user.getInterest1());
-        values.put(UpDatabaseHelper.INTEREST_2_COLUMN,user.getInterest2());
-        values.put(UpDatabaseHelper.INTEREST_3_COLUMN,user.getInterest3());
-        values.put(UpDatabaseHelper.TARGET_MALE_COLUMN,user.getTargetMale());
-        values.put(UpDatabaseHelper.TARGET_FEMALE_COLUMN,user.getTargetFemale());
-        values.put(UpDatabaseHelper.LAST_LOGIN_COLUMN,user.getLastLogin().toString());
-        db.insert(UpDatabaseHelper.USER_TABLE,null,values);
+        values.put(UpDatabaseHelper.ID_COLUMN, fbId);
+        values.put(UpDatabaseHelper.FIRST_NAME_COLUMN, firstName);
+        values.put(UpDatabaseHelper.LAST_NAME_COLUMN, lastName);
+        values.put(UpDatabaseHelper.GENDER_COLUMN, gender);
+        values.put(UpDatabaseHelper.FACEBOOK_ID_COLUMN, fbId);
+        values.put(UpDatabaseHelper.PROFILE_PHOTO_COLUMN, photo);
+        values.put(UpDatabaseHelper.COURSE_COLUMN, course);
+        values.put(UpDatabaseHelper.ACADEMIC_YEAR_COLUMN, year);
+        values.put(UpDatabaseHelper.ABOUT_ME_COLUMN, aboutMe);
+        values.put(UpDatabaseHelper.DOB_COLUMN, birthday);
+        values.put(UpDatabaseHelper.PHONE_COLUMN, phone);
+        values.put(UpDatabaseHelper.VERIFIED_COLUMN, verified);
+        values.put(UpDatabaseHelper.AGE_COLUMN, age);
+        values.put(UpDatabaseHelper.INTEREST_1_COLUMN, song);
+        values.put(UpDatabaseHelper.INTEREST_2_COLUMN, sport);
+        values.put(UpDatabaseHelper.INTEREST_3_COLUMN, food);
+        values.put(UpDatabaseHelper.TARGET_MALE_COLUMN, targetMale);
+        values.put(UpDatabaseHelper.TARGET_FEMALE_COLUMN, targetFemale);
+        values.put(UpDatabaseHelper.LAST_LOGIN_COLUMN, lastLogin.toString());
+        db.insert(UpDatabaseHelper.USER_TABLE, null, values);
+        db.close();
+        saveToFireBase();
+    }
+    private void saveImageToDatabase() {
+        imageViewProfilePicture.setDrawingCacheEnabled(true);
+        imageViewProfilePicture.buildDrawingCache();
+        bitmap = imageViewProfilePicture.getDrawingCache();
+        ContentValues values = new ContentValues();
+        values.put(UpDatabaseHelper.IMAGES_ID_COLUMN, fbId);
+        values.put(UpDatabaseHelper.IMAGE_COLUMN, getBytes(bitmap));
+        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        db.insert(UpDatabaseHelper.IMAGES_TABLE, null, values);
+    }
+    //from firebase save into database
+    private void executeQuery(UserDetails user, String roomId) {
+        ContentValues values = new ContentValues();
+        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        values.put(UpDatabaseHelper.ID_COLUMN, user.getId());
+        values.put(UpDatabaseHelper.FIRST_NAME_COLUMN, user.getFirstName());
+        values.put(UpDatabaseHelper.LAST_NAME_COLUMN, user.getLastName());
+        values.put(UpDatabaseHelper.GENDER_COLUMN, user.getGender());
+        values.put(UpDatabaseHelper.FACEBOOK_ID_COLUMN, user.getId());
+        values.put(UpDatabaseHelper.PROFILE_PHOTO_COLUMN, user.getPhoto());
+        values.put(UpDatabaseHelper.COURSE_COLUMN, user.getCourse());
+        values.put(UpDatabaseHelper.ACADEMIC_YEAR_COLUMN, user.getAcademicYear());
+        values.put(UpDatabaseHelper.ABOUT_ME_COLUMN, user.getAboutMe());
+        values.put(UpDatabaseHelper.DOB_COLUMN, user.getBirthday());
+        values.put(UpDatabaseHelper.PHONE_COLUMN, user.getPhoneNumber());
+        values.put(UpDatabaseHelper.VERIFIED_COLUMN, user.getIsVerified());
+        values.put(UpDatabaseHelper.AGE_COLUMN, user.getAge());
+        values.put(UpDatabaseHelper.INTEREST_1_COLUMN, user.getInterest1());
+        values.put(UpDatabaseHelper.INTEREST_2_COLUMN, user.getInterest2());
+        values.put(UpDatabaseHelper.INTEREST_3_COLUMN, user.getInterest3());
+        values.put(UpDatabaseHelper.TARGET_MALE_COLUMN, user.getTargetMale());
+        values.put(UpDatabaseHelper.TARGET_FEMALE_COLUMN, user.getTargetFemale());
+        values.put(UpDatabaseHelper.LAST_LOGIN_COLUMN, user.getLastLogin().toString());
+        db.insert(UpDatabaseHelper.USER_TABLE, null, values);
 
         ContentValues newValues = new ContentValues();
-        newValues.put(UpDatabaseHelper.FRIEND_ID_COLUMN,user.getId());
-        newValues.put(UpDatabaseHelper.FIRST_NAME_COLUMN,user.getFirstName());
-        newValues.put(UpDatabaseHelper.LAST_NAME_COLUMN,user.getLastName());
-        newValues.put(UpDatabaseHelper.CHATROOM_ID_COLUMN,roomId);
-        db.insert(UpDatabaseHelper.FRIENDSHIP_TABLE,null,newValues);
+        newValues.put(UpDatabaseHelper.FRIEND_ID_COLUMN, user.getId());
+        newValues.put(UpDatabaseHelper.FIRST_NAME_COLUMN, user.getFirstName());
+        newValues.put(UpDatabaseHelper.LAST_NAME_COLUMN, user.getLastName());
+        newValues.put(UpDatabaseHelper.CHATROOM_ID_COLUMN, roomId);
+        db.insert(UpDatabaseHelper.FRIENDSHIP_TABLE, null, newValues);
         db.close();
     }
-    private void saveImageToDatabase(UserDetails user,Bitmap bitmap){
+
+
+    private void saveImageToDatabase(UserDetails user, Bitmap bitmap) {
         ContentValues values = new ContentValues();
-        values.put(UpDatabaseHelper.IMAGES_ID_COLUMN,user.getId());
-        values.put(UpDatabaseHelper.IMAGE_COLUMN, AccountFragment.getBytes(bitmap));
+        values.put(UpDatabaseHelper.IMAGES_ID_COLUMN, user.getId());
+        values.put(UpDatabaseHelper.IMAGE_COLUMN, getBytes(bitmap));
         UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        db.insert(UpDatabaseHelper.IMAGES_TABLE,null,values);
-        String fullName = user.getFirstName()+" "+user.getLastName();
+        db.insert(UpDatabaseHelper.IMAGES_TABLE, null, values);
+        String fullName = user.getFirstName() + " " + user.getLastName();
         db.close();
+        ++friendDataDownloadedCount;
+        if(friendCount == friendDataDownloadedCount){
+            startNewActivity();
+        }
     }
-    private class myTask extends AsyncTask<Cursor,Void,Void> {
 
-        @Override
-        protected Void doInBackground(Cursor... params) {
-            Cursor friendCursor = params[0];
-            friendCursor.moveToFirst();
-            for(int i=0;i<friendCursor.getCount();i++){
 
-                String id = friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.FRIEND_ID_COLUMN));
-                String firstName = friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.FIRST_NAME_COLUMN));
-                String lastName =  friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.LAST_NAME_COLUMN));
-                String fullName = firstName +" "+lastName;
-                String roomId = friendCursor.getString(friendCursor.getColumnIndexOrThrow(UpDatabaseHelper.CHATROOM_ID_COLUMN));
-                FriendListItem item = new FriendListItem(fullName,id,bitmap);
+    //for face recogniztion
+    public void changeProfilePicture(){
+        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
 
-                friendCursor.moveToNext();
+        File pictureDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_ALARMS);
+        String pictureDirectoryPath = pictureDirectory.getPath();
+
+        Uri data = Uri.parse(pictureDirectoryPath);
+
+        photoPickerIntent.setDataAndType(data,"image/*");
+
+        startActivityForResult(photoPickerIntent, IMAGE_GALLERY_REQUEST);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            // if we are here, everything processed successfully.
+            if (requestCode == IMAGE_GALLERY_REQUEST) {
+                // if we are here, we are hearing back from the image gallery.
+                // the address of the image on the SD Card.
+                Uri imageUri = data.getData();
+
+                // declare a stream to read the image data from the SD Card.
+                InputStream inputStream;
+
+                // we are getting an input stream, based on the URI of the image.
+                try {
+                    inputStream = getActivity().getContentResolver().openInputStream(imageUri);
+
+                    // get a bitmap from the stream.
+                    Bitmap image = BitmapFactory.decodeStream(inputStream);
+
+//                    checkFace(image);
+                    if(checkFace(image)){
+                        //uploadProfilePhoto();
+                        // show the image to the user
+                        imageViewProfilePicture.setImageBitmap(image);
+                    }else{
+                        Toast.makeText(getActivity(),"Unable to use this Picture! Profile picture must have FACE!", Toast.LENGTH_LONG).show();
+                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    // show a message to the user indictating that the image is unavailable.
+                    Toast.makeText(getActivity(),"Unable to open image", Toast.LENGTH_LONG).show();
+                }
             }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-
         }
     }
 
-    //    private void retrieveDataFromDatabase() {
-//        databaseHelper = new UpDatabaseHelper(getContext());
-//        SQLiteDatabase readableDatabase = databaseHelper.getReadableDatabase();
-//        String[] projection ={
-//                UpDatabaseHelper.INTEREST_ID_COLUMN,
-//                UpDatabaseHelper.INTEREST_NAME_COLUMN,
-//                UpDatabaseHelper.INTEREST_CATEGORY_COLUMN
-//        };
-//        String sortOrder = UpDatabaseHelper.INTEREST_NAME_COLUMN +" ASC";
-//        Cursor query = readableDatabase.query(
-//                UpDatabaseHelper.INTEREST_TABLE,
-//                projection,
-//                null,
-//                null,
-//                null,
-//                null,
-//                sortOrder
-//        );
-//        if(query.getCount()>0){
-//            query.moveToFirst();
-//            while (!query.isLast()){
-//                int id = query.getInt(
-//                        query.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_ID_COLUMN)
-//                );
-//                String name = query.getString(
-//                        query.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_NAME_COLUMN)
-//                );
-//                String category = query.getString(
-//                        query.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_CATEGORY_COLUMN)
-//                );
-//                Interest interest = new Interest(id,name,category);
-//                if(category.equals("Sports")){
-//                    sportRes.add(interest);
-//                }else if(category.equals("Food")){
-//                    foodRes.add(interest);
-//                }else{
-//                    songRes.add(interest);
-//                }
-//            }
-//        }
-//        String filter = UpDatabaseHelper.INTEREST_CATEGORY_COLUMN +"= ?";
-//        String[] sportFilterArgs = {"Sports"};
-//        String[] foodFilterArgs = {"Food"};
-//        String[] songFilterAges = {"Song"};
-//        String sortOrder = UpDatabaseHelper.INTEREST_NAME_COLUMN+"  ASC";
-//        Cursor sportQuery = readableDatabase.query(
-//                UpDatabaseHelper.INTEREST_TABLE,
-//                projection,
-//                filter,
-//                sportFilterArgs,
-//                null,
-//                null,
-//                sortOrder
-//        );
-//        Cursor foodQuery = readableDatabase.query(
-//                UpDatabaseHelper.INTEREST_TABLE,
-//                projection,
-//                filter,
-//                foodFilterArgs,
-//                null,
-//                null,
-//                sortOrder
-//        );
-//        Cursor songQuery = readableDatabase.query(
-//                UpDatabaseHelper.INTEREST_TABLE,
-//                projection,
-//                filter,
-//                songFilterAges,
-//                null,
-//                null,
-//                sortOrder
-//        );
-//        if(sportQuery.getCount() > 0) {
-//            sportQuery.moveToFirst();
-//            while (!sportQuery.isLast()) {
-//                int id = sportQuery.getInt(
-//                        sportQuery.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_ID_COLUMN)
-//                );
-//                String name = sportQuery.getString(
-//                        sportQuery.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_NAME_COLUMN)
-//                );
-//                String category = sportQuery.getString(
-//                        sportQuery.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_CATEGORY_COLUMN)
-//                );
-//                Interest interest = new Interest(id, name, category);
-//                sportRes.add(interest);
-//                sportQuery.moveToNext();
-//            }
-//        }
-//        if(foodQuery.getCount() > 0) {
-//            foodQuery.moveToFirst();
-//            while (!foodQuery.isLast()) {
-//                int id = foodQuery.getInt(
-//                        foodQuery.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_ID_COLUMN)
-//                );
-//                String name = foodQuery.getString(
-//                        foodQuery.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_NAME_COLUMN)
-//                );
-//                String category = foodQuery.getString(
-//                        foodQuery.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_CATEGORY_COLUMN)
-//                );
-//                Interest interest = new Interest(id, name, category);
-//                foodRes.add(interest);
-//                foodQuery.moveToNext();
-//            }
-//        }
-//        if(songQuery.getCount() >0) {
-//            songQuery.moveToFirst();
-//            while (!songQuery.isLast()) {
-//                int id = songQuery.getInt(
-//                        songQuery.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_ID_COLUMN)
-//                );
-//                String name = songQuery.getString(
-//                        songQuery.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_NAME_COLUMN)
-//                );
-//                String category = songQuery.getString(
-//                        songQuery.getColumnIndexOrThrow(UpDatabaseHelper.INTEREST_CATEGORY_COLUMN)
-//                );
-//                Interest interest = new Interest(id, name, category);
-//                songRes.add(interest);
-//                songQuery.moveToNext();
-//            }
-//        }
-//        sportAdapter = new SpinInterestAdapter(getContext(),
-//                android.R.layout.simple_spinner_item,
-//                sportRes);
-//        songAdapter = new SpinInterestAdapter(getContext(),
-//                android.R.layout.simple_spinner_item,
-//                songRes);
-//        foodAdapter = new SpinInterestAdapter(getContext(),
-//                android.R.layout.simple_spinner_item,
-//                foodRes);
-//        adapter = new ArrayAdapter<Interest>(getContext(),android.R.layout.simple_spinner_item,songRes);
-//
-//        sportAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        songAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        foodAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        sportSpinner.setAdapter(adapter);
-//        songSpinner.setAdapter(adapter);
-//        foodSpinner.setAdapter(adapter);
-//    }
+    private boolean checkFace(Bitmap image) {
+        Frame frame = new Frame.Builder().setBitmap(image).build();
+        SparseArray<Face> faces = faceDetector.detect(frame);
+        int numberOfFaceDetected = faces.size();
+        Toast.makeText(getActivity(),"No.Face : "+ numberOfFaceDetected, Toast.LENGTH_SHORT).show();
+        if(numberOfFaceDetected != 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+    public static byte[] getBytes(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 70, stream);
+        return stream.toByteArray();
+    }
+
+    public static Bitmap getImage(byte[] data) {
+        return BitmapFactory.decodeByteArray(data, 0, data.length);
+    }
+
 }
+

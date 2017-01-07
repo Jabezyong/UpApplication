@@ -65,8 +65,8 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
         public static final String CONTENT_COLUMN ="content";
         public static final String CONTENT_TYPE_COLUMN ="contenttype";
         public static final String TIMESTAMP_COLUMN ="time";
-        public static final String VOICE_COLUMN = " voice";
-        public static final String IMAGE_COLUMN = " image";
+        public static final String VOICE_COLUMN = "voice";
+        public static final String IMAGE_COLUMN = "image";
         public static final String SEEN_COLUMN = " seen";
         //for user firned table
         public static final String FIREBASE_ID_COLUMN ="databaseid";
@@ -251,12 +251,12 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
                     null
             );
 
-            if(cursor!=null){
+            if(cursor.getCount() > 0){
                 cursor.moveToFirst();
             }else{
                 return null;
             }
-            byte[] data = cursor.getBlob(1);
+            byte[] data = cursor.getBlob(cursor.getColumnIndexOrThrow(IMAGE_COLUMN));
             db.close();
             return data;
         }

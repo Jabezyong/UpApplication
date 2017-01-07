@@ -177,7 +177,7 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
             }
         }
     }
-    private void readDataFromDatabase(Message msg) {
+    private void readDataFromDatabase(final Message msg) {
         databaseHelper = new UpDatabaseHelper(getContext());
         SQLiteDatabase readableDatabase = databaseHelper.getReadableDatabase();
         String content = msg.getContent();
@@ -191,19 +191,37 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
         }else {
             friendId = msg.getReceiver();
         }
-        UserDetails friend = databaseHelper.readUser(friendId);
+        final UserDetails friend = databaseHelper.readUser(friendId);
         if(friend != null) {
-            Bitmap bitmap = getImage(databaseHelper.getProfilePic(friendId));
-            if (friend != null && bitmap != null) {
-                String fullName = friend.getFirstName() + " " + friend.getLastName();
-                ChatListItem item = new ChatListItem(friendId,fullName, bitmap, content, roomId);
-                item.setTime(date);
-                chatListItems.add(0,item);
-                Collections.sort(chatListItems,new CustomComparator());
-                adapter.notifyDataSetChanged();
-                if(progressDialog.isShowing()){
-                    progressDialog.dismiss();
+            byte[] data = databaseHelper.getProfilePic(friendId);
+            if(data != null) {
+                Bitmap bitmap = getImage(data);
+
+                if (friend != null && bitmap != null) {
+                    String fullName = friend.getFirstName() + " " + friend.getLastName();
+                    ChatListItem item = new ChatListItem(friendId, fullName, bitmap, content, roomId);
+                    item.setTime(date);
+                    chatListItems.add(0, item);
+                    Collections.sort(chatListItems, new CustomComparator());
+                    adapter.notifyDataSetChanged();
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
                 }
+            }else{
+                StorageReference filepath = FirebaseStorage.getInstance().getReference().child("UserPhotos").child(friend.getId() + ".png");
+                int ONE_MEGABYTE = 1024 * 1024;
+                filepath.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        Bitmap bitmap = AccountFragment.getImage(bytes);
+                        saveImageToDatabase(friend, bitmap,msg);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                    }
+                });
             }
         }else{
             if(progressDialog.isShowing()){
@@ -211,7 +229,40 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
             }
         }
     }
+    private void saveImageToDatabase(UserDetails user, Bitmap bitmap,Message msg) {
+        ContentValues values = new ContentValues();
+        values.put(UpDatabaseHelper.IMAGES_ID_COLUMN, user.getId());
+        values.put(UpDatabaseHelper.IMAGE_COLUMN, AccountFragment.getBytes(bitmap));
+        UpDatabaseHelper databaseHelper = new UpDatabaseHelper(getContext());
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        db.insert(UpDatabaseHelper.IMAGES_TABLE, null, values);
+        db.close();
+        readDataFromDatabase(msg);
+//        String fullName = user.getFirstName() + " " + user.getLastName();
+//        String friendId  = "";
+//        if(msg.getReceiver().equals(ownerId)){
+//            friendId = msg.getSender();
+//        }else {
+//            friendId = msg.getReceiver();
+//        }
+//        String content = msg.getContent();
+//        String roomId = msg.getRoomId();
+//        Date date = msg.getDate();
+//        ChatListItem item = new ChatListItem(friendId, fullName, bitmap, content, roomId);
+//        item.setTime(date);
+//        chatListItems.add(0, item);
+//        Collections.sort(chatListItems, new CustomComparator());
+//        adapter.notifyDataSetChanged();
+//        if (progressDialog.isShowing()) {
+//            progressDialog.dismiss();
+//        }
+
+
+    }
     public Bitmap getImage(byte[] data){
+        if(data == null){
+            return null;
+        }
         return BitmapFactory.decodeByteArray(data,0,data.length);
     }
 }

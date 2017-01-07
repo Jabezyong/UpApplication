@@ -78,7 +78,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
         new GetToken().execute();
-        myDb = new DatabaseHelper(this);
+//        myDb = new DatabaseHelper(this);
     }
 
     private void initView() {
@@ -95,15 +95,18 @@ public class ChatActivity extends AppCompatActivity {
 //        myRef.updateChildren(userData);
 //        DatabaseReference msg_root = myRef.child(temp_key);
         if(dataSnapshot.getValue()!=null) {
-            Message msg = dataSnapshot.getValue(Message.class);
-            Iterator i = dataSnapshot.getChildren().iterator();
-            if(msg.getReceiver().equals(friendId)){
-                msg.setDeliverType(Message.TYPE_SEND);
-            }else{
-                msg.setDeliverType(Message.TYPE_RECEIVED);
+            Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
+            while (iterator.hasNext()) {
+                DataSnapshot next = iterator.next();
+                Message msg = next.getValue(Message.class);
+                if (msg.getReceiver().equals(friendId)) {
+                    msg.setDeliverType(Message.TYPE_SEND);
+                } else {
+                    msg.setDeliverType(Message.TYPE_RECEIVED);
+                }
+                msgList.add(msg);
+                adapter.notifyDataSetChanged();
             }
-            msgList.add(msg);
-            adapter.notifyDataSetChanged();
         }
 //        while(i.hasNext()){
 //            chat_msg = (String) ((DataSnapshot)i.next()).getValue();
@@ -248,7 +251,7 @@ public class ChatActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             adapter.notifyDataSetChanged();
-            messageReference.startAt(lastMsgKey).addValueEventListener(new ValueEventListener() {
+            messageReference.endAt(lastMsgKey).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     append_chat_conversation(dataSnapshot);

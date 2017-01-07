@@ -1,6 +1,7 @@
 package com.application.upapplication.Controller;
 
 import android.app.Application;
+import android.support.multidex.MultiDex;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
@@ -14,6 +15,7 @@ public static RequestQueue queues;
     @Override
     public void onCreate() {
         super.onCreate();
+        MultiDex.install(this);
         queues = Volley.newRequestQueue(getApplicationContext());
     }
 

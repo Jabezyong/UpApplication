@@ -107,7 +107,7 @@ public class ProfileFragment extends Fragment {
         initAdapter();
     }
     private void initAdapter(){
-        foodAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.food)){
+        foodAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_dropdown_item,getResources().getTextArray(R.array.food)){
             @Override
             public boolean isEnabled(int position) {
                 if(position == 0){
@@ -117,7 +117,7 @@ public class ProfileFragment extends Fragment {
                 }
             }
         };
-        sportAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.sports)){
+        sportAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_dropdown_item,getResources().getTextArray(R.array.sports)){
             @Override
             public boolean isEnabled(int position) {
                 if(position == 0){
@@ -127,7 +127,7 @@ public class ProfileFragment extends Fragment {
                 }
             }
         };
-        songAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.songs)){
+        songAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_dropdown_item,getResources().getTextArray(R.array.songs)){
             @Override
             public boolean isEnabled(int position) {
                 if(position == 0){
@@ -137,7 +137,7 @@ public class ProfileFragment extends Fragment {
                 }
             }
         };
-        coursesAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.courses)){
+        coursesAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_dropdown_item,getResources().getTextArray(R.array.courses)){
             @Override
             public boolean isEnabled(int position) {
                 if(position == 0){
@@ -147,7 +147,7 @@ public class ProfileFragment extends Fragment {
                 }
             }
         };
-        yearAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_item,getResources().getTextArray(R.array.year)){
+        yearAdapter = new ArrayAdapter<CharSequence>(getContext(),android.R.layout.simple_spinner_dropdown_item,getResources().getTextArray(R.array.year)){
             @Override
             public boolean isEnabled(int position) {
                 if(position == 0){

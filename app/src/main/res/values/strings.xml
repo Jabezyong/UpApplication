@@ -46,7 +46,7 @@
         <item>Western</item>
     </string-array>
     <string-array name="songs">
-        <item>Song Type</item>
+        <item>Favourite Song Type</item>
         <item>Blues</item>
         <item>Country</item>
         <item>Classical</item>
