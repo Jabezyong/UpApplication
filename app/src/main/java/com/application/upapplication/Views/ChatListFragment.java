@@ -36,6 +36,7 @@ import com.application.upapplication.Model.UserDetails;
 import com.application.upapplication.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -57,7 +58,7 @@ import static android.widget.AdapterView.OnItemClickListener;
  * Created by user on 12/23/2016.
  */
 
-public class ChatListFragment extends Fragment implements OnItemClickListener {
+public class ChatListFragment extends Fragment implements OnItemClickListener{
     ListView chatList;
     View view;
     String[] friend_names;
@@ -65,7 +66,9 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
     String[] lastMsg;
     String[] time;
     String ownerId;
+    int friendCount,readedCount;
     static List<ChatListItem> chatListItems;
+    List<DatabaseReference> referenceList;
     static  ChatListAdapter adapter;
     ProgressDialog progressDialog;
     UpDatabaseHelper databaseHelper;
@@ -91,7 +94,7 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
         chatList= (ListView) view.findViewById(R.id.chatlist);
 
         chatListItems = new ArrayList<ChatListItem>();
-
+        referenceList = new ArrayList<>();
         friend_names = getResources().getStringArray(R.array.friend_names);
         lastMsg = getResources().getStringArray(R.array.lastmessage);
         time = getResources().getStringArray(R.array.contact);
@@ -126,7 +129,7 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
                                     while(iterator1.hasNext()){
                                         DataSnapshot next1 = iterator1.next();
                                         Message value1 = next1.getValue(Message.class);
-                                        String content = value1.getContent();
+                                        friendCount++;
                                         readDataFromDatabase(value1);
                                     }
 
@@ -168,6 +171,8 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
         startActivity(intent);
 //        Toast.makeText(getContext(),position+"",Toast.LENGTH_LONG).show();
     }
+
+
     public static void updateUI(String friendId,Message msg){
         for(int i=0;i<chatListItems.size();i++){
             if(chatListItems.get(i).getProfile_id().equals(friendId)){
@@ -179,7 +184,6 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
     }
     private void readDataFromDatabase(final Message msg) {
         databaseHelper = new UpDatabaseHelper(getContext());
-        SQLiteDatabase readableDatabase = databaseHelper.getReadableDatabase();
         String content = msg.getContent();
         String friendId ="";
         String roomId  = msg.getRoomId();
@@ -196,18 +200,39 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
             byte[] data = databaseHelper.getProfilePic(friendId);
             if(data != null) {
                 Bitmap bitmap = getImage(data);
-
+                ChatListItem item = null;
                 if (friend != null && bitmap != null) {
                     String fullName = friend.getFirstName() + " " + friend.getLastName();
-                    ChatListItem item = new ChatListItem(friendId, fullName, bitmap, content, roomId);
+                    item = new ChatListItem(friendId, fullName, bitmap, content, roomId);
                     item.setTime(date);
                     chatListItems.add(0, item);
                     Collections.sort(chatListItems, new CustomComparator());
                     adapter.notifyDataSetChanged();
-                    if (progressDialog.isShowing()) {
-                        progressDialog.dismiss();
+                    String msgid = msg.getMessageId();
+                    DatabaseReference child = FirebaseDatabase.getInstance().getReference().child(ChatActivity.MESSAGE).child(roomId);
+
+//                    child.startAt(msgid).addValueEventListener(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(DataSnapshot dataSnapshot) {
+//                            append_chat_conversation(dataSnapshot);
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(DatabaseError databaseError) {
+//
+//                        }
+//                    });
+                    readedCount++;
+                    referenceList.add(child);
+                    if(friendCount == readedCount) {
+                        if (progressDialog.isShowing()) {
+                            progressDialog.dismiss();
+                        }
+                        addValueListener();
                     }
+
                 }
+
             }else{
                 StorageReference filepath = FirebaseStorage.getInstance().getReference().child("UserPhotos").child(friend.getId() + ".png");
                 int ONE_MEGABYTE = 1024 * 1024;
@@ -229,6 +254,23 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
             }
         }
     }
+
+    private void addValueListener() {
+        for(int i=0;i<referenceList.size();i++){
+//            referenceList.get(i).addValueEventListener(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(DataSnapshot dataSnapshot) {
+////                    append_chat_conversation(dataSnapshot);
+//                }
+//
+//                @Override
+//                public void onCancelled(DatabaseError databaseError) {
+//
+//                }
+//            });
+        }
+    }
+
     private void saveImageToDatabase(UserDetails user, Bitmap bitmap,Message msg) {
         ContentValues values = new ContentValues();
         values.put(UpDatabaseHelper.IMAGES_ID_COLUMN, user.getId());
@@ -256,8 +298,6 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
 //        if (progressDialog.isShowing()) {
 //            progressDialog.dismiss();
 //        }
-
-
     }
     public Bitmap getImage(byte[] data){
         if(data == null){
@@ -265,5 +305,28 @@ public class ChatListFragment extends Fragment implements OnItemClickListener {
         }
         return BitmapFactory.decodeByteArray(data,0,data.length);
     }
+    private void append_chat_conversation(DataSnapshot dataSnapshot) {
+//        temp_key = myRef.push().getKey();
+//        myRef.updateChildren(userData);
+//        DatabaseReference msg_root = myRef.child(temp_key);
+        if (dataSnapshot.getValue() != null) {
+            Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
+            while (iterator.hasNext()) {
+                DataSnapshot next = iterator.next();
+                Message msg = next.getValue(Message.class);
+                ChatListItem item = new ChatListItem();
+                item.setLastMsgKey(msg.getMessageId());
+                String friendId;
+                if(msg.getReceiver().equals(ownerId)){
+                    friendId = msg.getSender();
+                }else {
+                    friendId = msg.getReceiver();
+                }
+                updateUI(friendId,msg);
+            }
+        }
+    }
+
+
 }
 

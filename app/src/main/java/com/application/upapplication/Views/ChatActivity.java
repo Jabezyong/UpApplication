@@ -45,7 +45,7 @@ public class ChatActivity extends AppCompatActivity {
     public static String CHATROOMID =  "CHATROOMID";
     public static String FRIENDID = " FRIENDID";
     public static String NAME = "NAME";
-    private final String MESSAGE = "MESSAGES";
+    public final static String MESSAGE = "MESSAGES";
     private ListView msgListView;
     private EditText inputText;
     private Button send;
@@ -205,8 +205,9 @@ public class ChatActivity extends AppCompatActivity {
                 null,
                 null
                 );
-        new readMsgTask().execute(msgCursor);
         messageReference = FirebaseDatabase.getInstance().getReference().child(MESSAGE).child(roomId);
+        new readMsgTask().execute(msgCursor);
+
 
 
 
@@ -251,7 +252,7 @@ public class ChatActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             adapter.notifyDataSetChanged();
-            messageReference.endAt(lastMsgKey).addValueEventListener(new ValueEventListener() {
+            messageReference.startAt(lastMsgKey).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     append_chat_conversation(dataSnapshot);

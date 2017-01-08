@@ -246,12 +246,13 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         dialog = new ProgressDialog(getContext());
         dialog.setMessage("Loading");
         dialog.setCancelable(false);
-        dialog.show();
+
         bundle = getActivity().getIntent().getBundleExtra(LoginFragment.bundleTAG);
         this.view = inflater.inflate(R.layout.fragment_account, container, false);
         this.inflater = inflater;
         this.container = container;
         if (bundle != null) {
+            dialog.show();
             fbId = bundle.getString("id");
             SharedPreferences preferences = getContext().getSharedPreferences(MainActivity.UPPREFERENCE, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
@@ -409,6 +410,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         }
         Intent intent = new Intent(getContext(), MainActivity.class);
         startActivity(intent);
+        getActivity().finish();
     }
 
     private void verifySms() {

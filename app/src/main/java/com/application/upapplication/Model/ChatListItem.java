@@ -12,6 +12,7 @@ public class ChatListItem {
     private String friend_name;
     private Bitmap profile_pic;
     private String lastMsg;
+    private String lastMsgKey;
     private Date time;
     private String chatroomId;
     private String profile_id;
@@ -27,6 +28,14 @@ public class ChatListItem {
         this.profile_pic = profile_pic;
         this.lastMsg = lastMsg;
         this.chatroomId = chatroomId;
+    }
+
+    public String getLastMsgKey() {
+        return lastMsgKey;
+    }
+
+    public void setLastMsgKey(String lastMsgKey) {
+        this.lastMsgKey = lastMsgKey;
     }
 
     public String getProfile_id() {
