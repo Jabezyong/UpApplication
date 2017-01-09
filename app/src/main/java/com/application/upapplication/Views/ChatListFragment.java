@@ -16,6 +16,7 @@ import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,7 +59,7 @@ import static android.widget.AdapterView.OnItemClickListener;
  * Created by user on 12/23/2016.
  */
 
-public class ChatListFragment extends Fragment implements OnItemClickListener{
+public class ChatListFragment extends Fragment implements OnItemClickListener,ChildEventListener{
     ListView chatList;
     View view;
     String[] friend_names;
@@ -205,25 +206,14 @@ public class ChatListFragment extends Fragment implements OnItemClickListener{
                     String fullName = friend.getFirstName() + " " + friend.getLastName();
                     item = new ChatListItem(friendId, fullName, bitmap, content, roomId);
                     item.setTime(date);
-                    chatListItems.add(0, item);
+                    chatListItems.add(item);
                     Collections.sort(chatListItems, new CustomComparator());
                     adapter.notifyDataSetChanged();
                     String msgid = msg.getMessageId();
                     DatabaseReference child = FirebaseDatabase.getInstance().getReference().child(ChatActivity.MESSAGE).child(roomId);
-
-//                    child.startAt(msgid).addValueEventListener(new ValueEventListener() {
-//                        @Override
-//                        public void onDataChange(DataSnapshot dataSnapshot) {
-//                            append_chat_conversation(dataSnapshot);
-//                        }
-//
-//                        @Override
-//                        public void onCancelled(DatabaseError databaseError) {
-//
-//                        }
-//                    });
+//                    child.startAt(msgid).addChildEventListener(ChatListFragment.this);
                     readedCount++;
-                    referenceList.add(child);
+//                    referenceList.add(child);
                     if(friendCount == readedCount) {
                         if (progressDialog.isShowing()) {
                             progressDialog.dismiss();
@@ -256,19 +246,7 @@ public class ChatListFragment extends Fragment implements OnItemClickListener{
     }
 
     private void addValueListener() {
-        for(int i=0;i<referenceList.size();i++){
-//            referenceList.get(i).addValueEventListener(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot dataSnapshot) {
-////                    append_chat_conversation(dataSnapshot);
-//                }
-//
-//                @Override
-//                public void onCancelled(DatabaseError databaseError) {
-//
-//                }
-//            });
-        }
+
     }
 
     private void saveImageToDatabase(UserDetails user, Bitmap bitmap,Message msg) {
@@ -328,5 +306,28 @@ public class ChatListFragment extends Fragment implements OnItemClickListener{
     }
 
 
+    @Override
+    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+    }
+
+    @Override
+    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+    }
+
+    @Override
+    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onCancelled(DatabaseError databaseError) {
+
+    }
 }
 

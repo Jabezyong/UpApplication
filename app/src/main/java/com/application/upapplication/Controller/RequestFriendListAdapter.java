@@ -191,7 +191,9 @@ public class RequestFriendListAdapter extends BaseAdapter{
         db.close();
     }
 
-
+    public void updateList(List<FriendListItem> friendListItems){
+        this.friendListItems = friendListItems;
+    }
     private class ViewHolder{
         TextView friendName;
         ImageView friendImage;

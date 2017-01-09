@@ -41,8 +41,8 @@
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:visibility="visible"
-               android:src="@drawable/ic_arrow_up"
-                android:id="@+id/imageViewUp" />
+                android:src="@drawable/ic_arrow_down"
+                android:id="@+id/imageViewDown" />
             <ImageButton
                 android:background="#E1F5FE"
                 android:scaleType="fitCenter"
@@ -51,8 +51,8 @@
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:visibility="visible"
-                android:src="@drawable/ic_arrow_down"
-                android:id="@+id/imageViewDown" />
+               android:src="@drawable/ic_arrow_up"
+                android:id="@+id/imageViewUp" />
         </LinearLayout>
     </LinearLayout>
 

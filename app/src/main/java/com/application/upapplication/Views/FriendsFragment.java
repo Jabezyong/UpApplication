@@ -21,6 +21,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.application.upapplication.Controller.FriendListAdapter;
+import com.application.upapplication.Controller.NameComparator;
 import com.application.upapplication.Controller.RequestFriendListAdapter;
 import com.application.upapplication.Database.UpDatabaseHelper;
 import com.application.upapplication.Model.FriendListItem;
@@ -39,6 +40,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -86,9 +88,7 @@ public class FriendsFragment extends Fragment {
 
         readDataFromDatabase();
     }
-
-    private void readDataFromDatabase() {
-        databaseHelper = new UpDatabaseHelper(getContext());
+    private Cursor getFriendQuery(){
         SQLiteDatabase readableDatabase = databaseHelper.getReadableDatabase();
         Cursor friendCursor = readableDatabase.query(
                 UpDatabaseHelper.FRIENDSHIP_TABLE,
@@ -104,6 +104,12 @@ public class FriendsFragment extends Fragment {
                 null,
                 UpDatabaseHelper.FIRST_NAME_COLUMN +" DESC"
         );
+        return friendCursor;
+    }
+    private void readDataFromDatabase() {
+        databaseHelper = new UpDatabaseHelper(getContext());
+
+        Cursor friendCursor = getFriendQuery();
 
         if(friendCursor.getCount() >0){
             new myTask().execute(friendCursor);
@@ -112,6 +118,13 @@ public class FriendsFragment extends Fragment {
         }
 //        friendListAdapter.notifyDataSetChanged();
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+    }
+
 
     private void readFromFirebase() {
 
@@ -241,6 +254,7 @@ public class FriendsFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             friendListAdapter.notifyDataSetChanged();
+            Collections.sort(friendListItems,new NameComparator());
             listView.setAdapter(friendListAdapter);
         }
     }

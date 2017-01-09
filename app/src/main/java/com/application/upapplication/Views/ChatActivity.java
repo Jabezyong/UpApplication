@@ -39,7 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity implements ChildEventListener{
     public static String BUNDLE = "com.application.upapplication.BUNDLE";
     public static String CHATROOM = "CHATROOM";
     public static String CHATROOMID =  "CHATROOMID";
@@ -89,25 +89,45 @@ public class ChatActivity extends AppCompatActivity {
         msgListView.setAdapter(adapter);
 
     }
-
-    private void append_chat_conversation(DataSnapshot dataSnapshot) {
-//        temp_key = myRef.push().getKey();
-//        myRef.updateChildren(userData);
-//        DatabaseReference msg_root = myRef.child(temp_key);
-        if(dataSnapshot.getValue()!=null) {
-            Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
-            while (iterator.hasNext()) {
-                DataSnapshot next = iterator.next();
-                Message msg = next.getValue(Message.class);
-                if (msg.getReceiver().equals(friendId)) {
-                    msg.setDeliverType(Message.TYPE_SEND);
-                } else {
-                    msg.setDeliverType(Message.TYPE_RECEIVED);
-                }
-                msgList.add(msg);
-                adapter.notifyDataSetChanged();
-            }
+    private void append_chat_conversation(Message msg){
+        if (msg.getReceiver().equals(friendId)) {
+            msg.setDeliverType(Message.TYPE_SEND);
+        } else {
+            msg.setDeliverType(Message.TYPE_RECEIVED);
         }
+        msgList.add(msg);
+        adapter.notifyDataSetChanged();
+        saveInDatabase(msg);
+    }
+    private void append_chat_conversation(DataSnapshot dataSnapshot) {
+        if(dataSnapshot.getValue()!=null) {
+            Message msg = dataSnapshot.getValue(Message.class);
+            if (msg.getReceiver().equals(friendId)) {
+                msg.setDeliverType(Message.TYPE_SEND);
+            } else {
+                msg.setDeliverType(Message.TYPE_RECEIVED);
+            }
+            msgList.add(msg);
+            adapter.notifyDataSetChanged();
+            saveInDatabase(msg);
+        }
+    }
+//    private void append_chat_conversation(DataSnapshot dataSnapshot) {
+//        if(dataSnapshot.getValue()!=null) {
+//            Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
+//            while (iterator.hasNext()) {
+//                DataSnapshot next = iterator.next();
+//                Message msg = next.getValue(Message.class);
+//                if (msg.getReceiver().equals(friendId)) {
+//                    msg.setDeliverType(Message.TYPE_SEND);
+//                } else {
+//                    msg.setDeliverType(Message.TYPE_RECEIVED);
+//                }
+//                msgList.add(msg);
+//                adapter.notifyDataSetChanged();
+//                saveInDatabase(msg);
+//            }
+//        }
 //        while(i.hasNext()){
 //            chat_msg = (String) ((DataSnapshot)i.next()).getValue();
 //            chat_sender = (String) ((DataSnapshot)i.next()).getValue();
@@ -119,8 +139,6 @@ public class ChatActivity extends AppCompatActivity {
 //            }
 //            msgList.add(msg);
 //        }
-
-    }
 
     private void sendMsg(){
         String msg = inputText.getText().toString();
@@ -134,8 +152,8 @@ public class ChatActivity extends AppCompatActivity {
             newMsg.setRoomId(roomId);
 
             push.setValue(newMsg);
-            msgList.add(newMsg);
-            saveInDatabase(newMsg);
+//            msgList.add(newMsg);
+//            saveInDatabase(newMsg);
 //            adapter.notifyDataSetChanged();
 
 
@@ -212,6 +230,32 @@ public class ChatActivity extends AppCompatActivity {
 
 
     }
+
+    @Override
+    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+        append_chat_conversation(dataSnapshot);
+    }
+
+    @Override
+    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+    }
+
+    @Override
+    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override
+    public void onCancelled(DatabaseError databaseError) {
+
+    }
+
     private class GetToken extends AsyncTask<Void,Void,Void>{
 
         @Override
@@ -221,6 +265,7 @@ public class ChatActivity extends AppCompatActivity {
             return null;
         }
     }
+
     private class readMsgTask extends AsyncTask<Cursor,Void,Void>{
 
         @Override
@@ -250,20 +295,13 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
+        protected void onPostExecute(final Void aVoid) {
             adapter.notifyDataSetChanged();
-            messageReference.startAt(lastMsgKey).addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    append_chat_conversation(dataSnapshot);
-                    recNotification();
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
+            if(lastMsgKey == null){
+                messageReference.orderByKey().addChildEventListener(ChatActivity.this);
+            }else {
+               messageReference.orderByKey().addChildEventListener(ChatActivity.this);
+            }
         }
     }
 }
