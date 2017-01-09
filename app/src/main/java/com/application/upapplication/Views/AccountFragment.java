@@ -486,9 +486,10 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         if (dialog.isShowing()) {
             dialog.dismiss();
         }
+        getActivity().finish();
         Intent intent = new Intent(getContext(), MainActivity.class);
         startActivity(intent);
-        getActivity().finish();
+
     }
 
     private void verifySms() {

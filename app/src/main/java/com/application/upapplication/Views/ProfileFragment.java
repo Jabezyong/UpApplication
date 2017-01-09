@@ -252,8 +252,9 @@ public class ProfileFragment extends Fragment {
     public void logOut(){
         LoginManager.getInstance().logOut();
         getActivity().finish();
-        Intent intent = new Intent(this.getContext(),MainActivity.class);
+        Intent intent = new Intent(this.getContext(),LoginActivity.class);
         startActivity(intent);
+
     }
 
     //for face recogniztion

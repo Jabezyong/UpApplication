@@ -109,15 +109,6 @@ public class LoginFragment extends Fragment {
         request.executeAsync();
     }
 
-    private Bundle getFacebookData(JSONObject object) {
-//        Bundle bFacebookData = new Bundle();
-
-
-//        Intent intent = new Intent(getApplicationContext(),AccountFragment.class);
-//        intent.putExtra(bundleTAG,bFacebookData);
-//        startActivity(intent);
-        return null;
-    }
 
 
     @Override

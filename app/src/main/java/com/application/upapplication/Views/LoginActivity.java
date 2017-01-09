@@ -64,77 +64,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         return !(accessToken == null || accessToken.getPermissions().isEmpty());
     }
-    private void initDatabase(){
-       mProgressDialog = new ProgressDialog(this);
+    private void initDatabase() {
+        mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Initializing");
         mProgressDialog.show();
         databaseHelper = new UpDatabaseHelper(this);
-            db = databaseHelper.getWritableDatabase();
-           mProgressDialog.dismiss();
-//            databaseReference.addValueEventListener(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot dataSnapshot) {
-////                    Iterable<DataSnapshot> children = dataSnapshot.getChildren();
-////                    for(DataSnapshot child: children){
-//                        executeInterestsQuery(dataSnapshot);
-//                }
-//
-//                @Override
-//                public void onCancelled(DatabaseError databaseError) {
-//
-//                }
-//            });
-//            coursesReference.addValueEventListener(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot dataSnapshot) {
-//                    executeCoursesQuery(dataSnapshot);
-//                }
-//
-//                @Override
-//                public void onCancelled(DatabaseError databaseError) {
-//
-//                }
-//            });
-
+        db = databaseHelper.getWritableDatabase();
+        mProgressDialog.dismiss();
     }
-
-//    private void executeCoursesQuery(DataSnapshot dataSnapshot) {
-//        ContentValues values=  new ContentValues();
-//        String course ="";
-//        Iterator i = dataSnapshot.getChildren().iterator();
-//        while (i.hasNext()){
-//            DataSnapshot data= (DataSnapshot) i.next();
-//            course = (String) data.getValue();
-//            System.out.print(course);
-//            values.put(UpDatabaseHelper.COURSE_NAME_COLUMN,course);
-//            values.put(UpDatabaseHelper.COURSE_ID_COLUMN,id);
-//            db.insert(UpDatabaseHelper.COURSE_TABLE,null,values);
-//        }
-//    }
-
-//    private void executeInterestsQuery(DataSnapshot dataSnapshot) {
-//
-//        ContentValues values = new ContentValues();
-//        String  interest ="";
-//        String category;
-//        Iterator i =  dataSnapshot.getChildren().iterator();
-//       while(i.hasNext()){
-//           DataSnapshot data = (DataSnapshot) i.next();
-//           category =data.getKey();
-//           for(DataSnapshot child : data.getChildren()){
-//               interest = child.getValue().toString();
-//               values.put(UpDatabaseHelper.INTEREST_CATEGORY_COLUMN,category);
-//               values.put(UpDatabaseHelper.INTEREST_NAME_COLUMN,interest);
-//               db.insert(UpDatabaseHelper.INTEREST_TABLE,null,values);
-//           }
-//           }
-//           long total = data.getChildrenCount();
-//           interest = data.child(data.getKey()).getValue(String.class);
-//           System.out.print("hello");
-
-//        }
-//    }
-
     private boolean isFirstRun(SharedPreferences preferences){
         SharedPreferences.Editor editor = preferences.edit();
         if(preferences.getBoolean("FirstRun",true)){

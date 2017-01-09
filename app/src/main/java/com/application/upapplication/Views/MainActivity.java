@@ -104,8 +104,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if(checkPermission()){
+        boolean granted = checkPermission();
+        if(granted ){
             init();
         }
     }
@@ -117,27 +117,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             finish();
             Intent intent = new Intent(this,LoginActivity.class);
             startActivity(intent);
-            return;
-        }
-        setContentView(R.layout.activity_main);
-        buildGoogleApiClient();
-        initFragments();
-        imageViewChatList = (ImageButton) findViewById(R.id.imageViewChatList);
-        imageViewChatList.setOnClickListener(this);
-        imageViewAccount = (ImageButton)findViewById(R.id.imageViewAccount);
-        imageViewAccount.setOnClickListener(this);
-        imageViewSeacrh = (ImageButton)findViewById(R.id.imageViewSeacrh);
-        imageViewSeacrh.setOnClickListener(this);
-        imageFriends = (ImageButton)findViewById(R.id.imageViewFriendList);
-        imageFriends.setOnClickListener(this);
 
+            return;
+        }else {
+            setContentView(R.layout.activity_main);
+            buildGoogleApiClient();
+            initFragments();
+            imageViewChatList = (ImageButton) findViewById(R.id.imageViewChatList);
+            imageViewChatList.setOnClickListener(this);
+            imageViewAccount = (ImageButton) findViewById(R.id.imageViewAccount);
+            imageViewAccount.setOnClickListener(this);
+            imageViewSeacrh = (ImageButton) findViewById(R.id.imageViewSeacrh);
+            imageViewSeacrh.setOnClickListener(this);
+            imageFriends = (ImageButton) findViewById(R.id.imageViewFriendList);
+            imageFriends.setOnClickListener(this);
+        }
 
     }
 
     private void initFragments() {
-//        ProgressDialog dialog = new ProgressDialog(getApplicationContext());
-//        dialog.setMessage("Loading");
-//        dialog.show();
         ChatListFragment chatRoomListFragment = new ChatListFragment();
         SwipeFragment swipeFragment = new SwipeFragment();
         FriendsFragment profileFragment = new FriendsFragment();
