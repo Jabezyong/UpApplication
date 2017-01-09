@@ -229,6 +229,8 @@ public class FriendsFragment extends Fragment {
         friendListAdapter.notifyDataSetChanged();
         db.close();
     }
+
+
     private class myTask extends AsyncTask<Cursor,Void,Void>{
 
         @Override
@@ -258,6 +260,7 @@ public class FriendsFragment extends Fragment {
             listView.setAdapter(friendListAdapter);
         }
     }
+
     public Bitmap getImage(byte[] data){
         return BitmapFactory.decodeByteArray(data,0,data.length);
     }

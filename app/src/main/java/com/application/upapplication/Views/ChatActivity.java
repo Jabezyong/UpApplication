@@ -58,6 +58,7 @@ public class ChatActivity extends AppCompatActivity implements ChildEventListene
     private String chat_msg,chat_sender;
     private List<Message> msgList = new ArrayList<Message>();
     private DatabaseReference messageReference ;
+    UpDatabaseHelper helper;
     MyFirebaseInstanceIDService serve;
     SQLiteDatabase writaleDatabase;
 
@@ -174,6 +175,8 @@ public class ChatActivity extends AppCompatActivity implements ChildEventListene
         value.put(UpDatabaseHelper.CONTENT_COLUMN,msg.getContent());
         value.put(UpDatabaseHelper.CONTENT_TYPE_COLUMN,msg.getContentType());
         value.put(UpDatabaseHelper.TIMESTAMP_COLUMN,msg.getDate().toString());
+        if(!writaleDatabase.isOpen())
+            writaleDatabase = helper.getWritableDatabase();
         writaleDatabase.insert(UpDatabaseHelper.MESSAGES_TABLE,null,value);
         ChatListFragment.updateUI(friendId,msg);
     }
@@ -203,7 +206,7 @@ public class ChatActivity extends AppCompatActivity implements ChildEventListene
         friendId = bundleExtra.getString(FRIENDID);
         fullName = bundleExtra.getString(NAME);
         setTitle(fullName);
-        UpDatabaseHelper helper = new UpDatabaseHelper(this);
+        helper = new UpDatabaseHelper(this);
         SQLiteDatabase readableDatabase = helper.getReadableDatabase();
         writaleDatabase = helper.getWritableDatabase();
         String selection = UpDatabaseHelper.CHATROOM_ID_COLUMN + " = ?";

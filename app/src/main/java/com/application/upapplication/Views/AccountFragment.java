@@ -99,12 +99,12 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
     TextView textViewShowName, textViewShowGender, textViewShowBirthday;
     EditText etAbout;
     ImageView imageViewProfilePicture;
-    private ArrayAdapter<CharSequence> yearAdapter, coursesAdapter, songAdapter, sportAdapter, foodAdapter;
-    private Spinner sportSpinner, foodSpinner, songSpinner, courseSpinner, yearSpinner;
+    private ArrayAdapter<CharSequence> acaYearAdapter, coursesAdapter, songAdapter, sportAdapter, foodAdapter,dayAdapter,monthAdapter,yearAdapter;
+    private Spinner sportSpinner, foodSpinner, songSpinner, courseSpinner, acaYearSpinner,daySpinner,monthSpinner,yearSpinner;
     private Switch male, female;
     private Profile FACEBOOK_PROFILE;
-    String food, song, sport, course, firstName, lastName, gender, birthday, aboutMe, fbId, photo, phone;
-    int year, age, targetMale, targetFemale, verified;
+    String food, song, sport, course, firstName, lastName, gender, birthday, aboutMe, fbId, photo, phone,strYear,strMonth,strDay;
+    int academicYear,month,day,year, age, targetMale, targetFemale, verified;
     boolean found = false;
     Date lastLogin;
     private Bitmap bitmap;
@@ -133,8 +133,11 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         sportSpinner = (Spinner) view.findViewById(R.id.spinnerSport);
         songSpinner = (Spinner) view.findViewById(R.id.spinnerSong);
         foodSpinner = (Spinner) view.findViewById(R.id.spinnerFood);
-        yearSpinner = (Spinner) view.findViewById(R.id.spinnerYear);
+        acaYearSpinner = (Spinner) view.findViewById(R.id.spinnerYear);
         courseSpinner = (Spinner) view.findViewById(R.id.spinnerCourse);
+        daySpinner = (Spinner) view.findViewById(R.id.spinnerBirthdayDay);
+        monthSpinner = (Spinner) view.findViewById(R.id.spinnerBirthdayMonth);
+        yearSpinner = (Spinner) view.findViewById(R.id.spinnerBirthdayYear);
         btnEdit = (Button) view.findViewById(R.id.btnEdit);
         btnEdit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -206,7 +209,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                 }
             }
         };
-        yearAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, getResources().getTextArray(R.array.year)) {
+        acaYearAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, getResources().getTextArray(R.array.year)) {
             @Override
             public boolean isEnabled(int position) {
                 if (position == 0) {
@@ -216,28 +219,84 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                 }
             }
         };
-
+        String[] years = new String[]{"Year","2000","1999","1998","1997","1996","1995","1994","1993","1992"};
+        yearAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, years) {
+            @Override
+            public boolean isEnabled(int position) {
+                if (position == 0) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        };
+        monthAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, getResources().getTextArray(R.array.month)) {
+            @Override
+            public boolean isEnabled(int position) {
+                if (position == 0) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        };
+        String[] days = new String[]{"Day","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31"};
+        dayAdapter = new ArrayAdapter<CharSequence>(getContext(), android.R.layout.simple_spinner_dropdown_item, days) {
+            @Override
+            public boolean isEnabled(int position) {
+                if (position == 0) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        };
         foodAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sportAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         songAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         coursesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        acaYearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        monthAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        dayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        yearSpinner.setAdapter(yearAdapter);
+        acaYearSpinner.setAdapter(acaYearAdapter);
         foodSpinner.setAdapter(foodAdapter);
         sportSpinner.setAdapter(sportAdapter);
         songSpinner.setAdapter(songAdapter);
         courseSpinner.setAdapter(coursesAdapter);
+        yearSpinner.setAdapter(yearAdapter);
+        monthSpinner.setAdapter(monthAdapter);
+        daySpinner.setAdapter(dayAdapter);
 
-        yearSpinner.setOnItemSelectedListener(this);
+        acaYearSpinner.setOnItemSelectedListener(this);
         foodSpinner.setOnItemSelectedListener(this);
         sportSpinner.setOnItemSelectedListener(this);
         songSpinner.setOnItemSelectedListener(this);
         courseSpinner.setOnItemSelectedListener(this);
-
-
+        yearSpinner.setOnItemSelectedListener(this);
+        monthSpinner.setOnItemSelectedListener(this);
+        daySpinner.setOnItemSelectedListener(this);
+        if(birthday!=null){
+            String[] separated = birthday.split("/");
+            String month = separated[0];
+            String day = separated[1];
+            String year = separated[2];
+            selectSpinnerItemByValue(yearSpinner,year);
+            selectSpinnerItemByValue(monthSpinner,month);
+            selectSpinnerItemByValue(daySpinner,day);
+        }
     }
-
+    private void selectSpinnerItemByValue(Spinner spinner,String value){
+        ArrayAdapter adapter = (ArrayAdapter) spinner.getAdapter();
+        for(int position=0;position<adapter.getCount();position++){
+            String v = adapter.getItem(position).toString();
+            if(v.equals(value)){
+                spinner.setSelection(position);
+                return;
+            }
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup container,
@@ -275,7 +334,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         gender = bundle.getString("gender");
         textViewShowGender.setText(gender);
         birthday = bundle.getString("birthday");
-        textViewShowBirthday.setText(birthday);
+
 
         initSpinners();
     }
@@ -297,7 +356,16 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
                     course = (String) courseSpinner.getSelectedItem();
                     break;
                 case R.id.spinnerYear:
+                    academicYear = Integer.valueOf((String) acaYearSpinner.getSelectedItem());
+                    break;
+                case R.id.spinnerBirthdayYear:
                     year = Integer.valueOf((String) yearSpinner.getSelectedItem());
+                    break;
+                case R.id.spinnerBirthdayMonth:
+                    month = Integer.valueOf((String) monthSpinner.getSelectedItem());
+                    break;
+                case R.id.spinnerBirthdayDay:
+                    day = Integer.valueOf((String) daySpinner.getSelectedItem());
                     break;
                 default:
                     break;
@@ -326,9 +394,9 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
             check = false;
             msg += "Please Select Favourite Food\n";
         }
-        if (yearSpinner.getSelectedItemPosition() == 0) {
+        if (acaYearSpinner.getSelectedItemPosition() == 0) {
             check = false;
-            msg += "Please Select Intake Year\n";
+            msg += "Please Select Academic Year\n";
         }
         if (songSpinner.getSelectedItemPosition() == 0) {
             check = false;
@@ -337,6 +405,18 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         if (foodSpinner.getSelectedItemPosition() == 0) {
             check = false;
             msg += "Please Select Favourite Food Type\n";
+        }
+        if (yearSpinner.getSelectedItemPosition() == 0) {
+            check = false;
+            msg += "Please Select Year of Birth\n";
+        }
+        if (monthSpinner.getSelectedItemPosition() == 0) {
+            check = false;
+            msg += "Please Select Month of Birth\n";
+        }
+        if (daySpinner.getSelectedItemPosition() == 0) {
+            check = false;
+            msg += "Please Select Day of Birth\n";
         }
         if (sportSpinner.getSelectedItemPosition() == 0) {
             check = false;
@@ -389,8 +469,8 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
     private void saving() {
 
         if (birthday != null) {
-            String[] separated = birthday.split("/");
-            age = 2017 - Integer.valueOf(separated[2]);
+
+            age = 2017 - year;
         } else {
             age = 20;
         }
@@ -665,8 +745,9 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         values.put(UpDatabaseHelper.FACEBOOK_ID_COLUMN, fbId);
         values.put(UpDatabaseHelper.PROFILE_PHOTO_COLUMN, photo);
         values.put(UpDatabaseHelper.COURSE_COLUMN, course);
-        values.put(UpDatabaseHelper.ACADEMIC_YEAR_COLUMN, year);
+        values.put(UpDatabaseHelper.ACADEMIC_YEAR_COLUMN, academicYear);
         values.put(UpDatabaseHelper.ABOUT_ME_COLUMN, aboutMe);
+        birthday = monthSpinner.getSelectedItem() +"/"+ daySpinner.getSelectedItem()+"/"+yearSpinner.getSelectedItem();
         values.put(UpDatabaseHelper.DOB_COLUMN, birthday);
         values.put(UpDatabaseHelper.PHONE_COLUMN, phone);
         values.put(UpDatabaseHelper.VERIFIED_COLUMN, verified);

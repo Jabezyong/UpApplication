@@ -37,7 +37,8 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".Views.ChatActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:parentActivityName=".Views.MainActivity"/>
         <activity
             android:name="com.mob.tools.MobUIShell"
             android:configChanges="keyboardHidden|orientation|screenSize|locale|layoutDirection"
@@ -75,6 +76,7 @@
         <meta-data
             android:name="com.google.android.gms.vision.DEPENDENCIES"
             android:value="face" />
+
     </application>
 
 </manifest>

@@ -31,7 +31,8 @@
                 android:text="Edit Picture"
                 android:layout_width="match_parent"
                 android:layout_height="26dp"
-                android:id="@+id/btnEdit" />
+                android:id="@+id/btnEdit"
+                android:onClick="onLoadImageClick"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -412,8 +413,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="@string/update"
-                android:visibility="gone"
-                android:onClick="submit"
                 android:background="?android:attr/selectableItemBackground"
                 android:textColor="@color/cast_libraries_material_featurehighlight_outer_highlight_default_color" />
             <Button

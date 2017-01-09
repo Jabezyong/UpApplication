@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.LocationManager;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 
 
 import com.application.upapplication.Controller.GeofenceTransitionsIntentService;
+import com.application.upapplication.Database.UpDatabaseHelper;
 import com.application.upapplication.Model.Constants;
 import com.application.upapplication.Model.UserDetails;
 import com.application.upapplication.R;
@@ -49,6 +51,7 @@ import com.mindorks.placeholderview.SwipeDecor;
 import com.mindorks.placeholderview.SwipePlaceHolderView;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,8 +62,10 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
     private ArrayList<Geofence> mGeofenceList;
     private ArrayList<TinderCard> tinderCards ;
     private LinearLayout wholeLayout;
+    private List<String> friendListid;
     ValueEventListener listener;
     private DatabaseReference mDataBase;
+    UpDatabaseHelper helper;
     ProgressDialog waitDialog;
     int count = 0;
     int totalPhoto = 0;
@@ -70,6 +75,8 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
     public static Button btnSearch;
     public static boolean isSchool = false;
     String ownerid;
+    static int targetMale;
+    static int targetFemale;
     public static SwipeFragment newInstance() {
         SwipeFragment swipeFragment = new SwipeFragment();
         Bundle extraArguments = new Bundle();
@@ -98,8 +105,11 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_swipe, container, false);
+        helper = new UpDatabaseHelper(getContext());
         SharedPreferences preferences = getContext().getSharedPreferences(MainActivity.UPPREFERENCE, Context.MODE_PRIVATE);
         ownerid = preferences.getString(getString(R.string.ownerid),"");
+        targetMale = helper.getTargetMale(ownerid);
+        targetFemale = helper.getTargetFemale(ownerid);
         wholeLayout = (LinearLayout) view.findViewById(R.id.wholeLayout);
         tinderCards = new ArrayList<>();
         ButterKnifeLite.bind(this,view);
@@ -219,6 +229,23 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
         if(ownerid.equals(id)){
             return;
         }
+
+        if(friendListid == null)
+            friendListid = helper.getFriendList();
+        if(friendListid.size()>0){
+            if(friendListid.contains(id))
+                return;
+        }
+        if(user.getGender().equals("male")){
+            if(targetMale == 0){
+                return;
+            }
+        }
+        if(user.getGender().equals("female")){
+            if(targetFemale == 0){
+                return;
+            }
+        }
         String name = user.getFirstName()+" "+ user.getLastName();
         int age = user.getAge();
         String course = user.getCourse();
@@ -255,6 +282,7 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot!=null){
+
                     Iterable<DataSnapshot> children = dataSnapshot.getChildren();
                     for(DataSnapshot data:children){
 
@@ -322,4 +350,6 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
     private void onAcceptClick(){
         mSwipView.doSwipe(true);
     }
+
+
 }

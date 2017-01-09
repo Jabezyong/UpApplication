@@ -289,6 +289,7 @@
                 android:layout_height="90dp"
                 android:background="#C5E0ED"
                 android:orientation="vertical">
+
                 <TextView
                     android:text="Birthday"
                     android:textStyle="bold"
@@ -301,16 +302,32 @@
                     android:id="@+id/textViewTitleBirthday"
                     android:layout_centerInParent="true"
                     android:layout_weight="1" />
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="18sp"
-                    android:textColor="#838383"
-                    android:layout_marginLeft="20dp"
-                    android:gravity="center_vertical"
-                    android:id="@+id/textViewShowBirthday"
-                    android:layout_centerInParent="true"
-                    android:layout_weight="1" />
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+                    <Spinner
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:layout_weight="1"
+                        android:id="@+id/spinnerBirthdayMonth"
+                        ></Spinner>
+
+                    <Spinner
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginLeft="15dp"
+                        android:id="@+id/spinnerBirthdayDay"></Spinner>
+                    <Spinner
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:id="@+id/spinnerBirthdayYear"></Spinner>
+                </LinearLayout>
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1sp"

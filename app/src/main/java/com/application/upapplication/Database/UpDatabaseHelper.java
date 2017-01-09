@@ -9,6 +9,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.application.upapplication.Model.UserDetails;
 
 import java.io.File;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by user on 12/16/2016.
@@ -260,4 +263,73 @@ public class UpDatabaseHelper extends SQLiteOpenHelper {
             db.close();
             return data;
         }
+
+    public List<String> getFriendList(){
+        String[] columns = {
+                FRIEND_ID_COLUMN
+        };
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(FRIENDSHIP_TABLE,
+                columns,
+                null,
+                null,
+                null,
+                null,
+                null);
+        if(cursor.getCount()>0){
+            List<String> lists = new ArrayList<>();
+            cursor.moveToFirst();
+            while(!cursor.isAfterLast()){
+                String friendId = cursor.getString(cursor.getColumnIndex(FRIEND_ID_COLUMN));
+                lists.add(friendId);
+                cursor.moveToNext();
+            }
+            return lists;
+        }else{
+            return null;
+        }
+    }
+
+    public int getTargetMale(String id){
+        SQLiteDatabase db = getReadableDatabase();
+        String[] columns = {
+                TARGET_MALE_COLUMN
+        };
+        Cursor cursor = db.query(USER_TABLE,
+                columns,
+                null,
+                null,
+                null,
+                null,
+                null);
+        if(cursor.getCount()>0){
+            List<String> lists = new ArrayList<>();
+            cursor.moveToFirst();
+            int targetMale = cursor.getInt(cursor.getColumnIndex(TARGET_MALE_COLUMN));
+            return targetMale;
+        }else{
+            return 0;
+        }
+    }
+    public int getTargetFemale(String id){
+        SQLiteDatabase db = getReadableDatabase();
+        String[] columns = {
+                TARGET_FEMALE_COLUMN
+        };
+        Cursor cursor = db.query(USER_TABLE,
+                columns,
+                null,
+                null,
+                null,
+                null,
+                null);
+        if(cursor.getCount()>0){
+            List<String> lists = new ArrayList<>();
+            cursor.moveToFirst();
+            int targetFemale = cursor.getInt(cursor.getColumnIndex(TARGET_FEMALE_COLUMN));
+            return targetFemale;
+        }else{
+            return 0;
+        }
+    }
 }
