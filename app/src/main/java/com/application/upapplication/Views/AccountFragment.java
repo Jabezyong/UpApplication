@@ -425,9 +425,7 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         if (!male.isPressed() && !female.isPressed()) {
             msg += "Please Select Gender of target\n";
         }
-        if (birthday == null) {
-
-        }
+        birthday = monthSpinner.getSelectedItem() +"/"+ daySpinner.getSelectedItem()+"/"+yearSpinner.getSelectedItem();
 
 
         if (!check) {
@@ -747,7 +745,6 @@ public class AccountFragment extends Fragment implements AdapterView.OnItemSelec
         values.put(UpDatabaseHelper.COURSE_COLUMN, course);
         values.put(UpDatabaseHelper.ACADEMIC_YEAR_COLUMN, academicYear);
         values.put(UpDatabaseHelper.ABOUT_ME_COLUMN, aboutMe);
-        birthday = monthSpinner.getSelectedItem() +"/"+ daySpinner.getSelectedItem()+"/"+yearSpinner.getSelectedItem();
         values.put(UpDatabaseHelper.DOB_COLUMN, birthday);
         values.put(UpDatabaseHelper.PHONE_COLUMN, phone);
         values.put(UpDatabaseHelper.VERIFIED_COLUMN, verified);

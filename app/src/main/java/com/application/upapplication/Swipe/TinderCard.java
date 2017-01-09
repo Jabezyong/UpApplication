@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.application.upapplication.Model.SendFriendRequest;
@@ -114,6 +115,7 @@ public class TinderCard {
     @SwipeIn
     private void onSwipeIn(){
         sendFriendRequest();
+        Toast.makeText(context,"Friend Request Sent",Toast.LENGTH_LONG).show();
         int i = swipeView.getChildCount();
         if(i ==1){
             btnSearch.setVisibility(VISIBLE);
@@ -146,8 +148,11 @@ public class TinderCard {
             SendFriendRequest request = new SendFriendRequest(ownerId);
             DatabaseReference friendReferece = FirebaseDatabase.getInstance().getReference().child(FRIEND).child(friendId);
             friendReferece.child(ownerId).setValue(request);
+
             return null;
         }
+
+
     }
 //    private void sendFriendRequest(){
 //        DatabaseReference ownerReference = FirebaseDatabase.getInstance().getReference().child(FRIEND).child(ownerId);

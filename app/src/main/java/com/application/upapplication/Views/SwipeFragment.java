@@ -232,9 +232,11 @@ public class SwipeFragment extends Fragment implements ResultCallback<Status> {
 
         if(friendListid == null)
             friendListid = helper.getFriendList();
-        if(friendListid.size()>0){
-            if(friendListid.contains(id))
-                return;
+        if(friendListid !=null) {
+            if (friendListid.size() > 0) {
+                if (friendListid.contains(id))
+                    return;
+            }
         }
         if(user.getGender().equals("male")){
             if(targetMale == 0){
