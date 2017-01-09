@@ -31,6 +31,7 @@ import com.application.upapplication.Model.UserDetails;
 import com.application.upapplication.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -45,6 +46,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static android.R.attr.bitmap;
+import static android.R.attr.data;
 
 
 /**
@@ -57,8 +59,10 @@ public class FriendsFragment extends Fragment {
     FriendListAdapter friendListAdapter;
     List<FriendListItem> friendListItems;
     UpDatabaseHelper databaseHelper;
+    DatabaseReference reference ;
     View view;
     String ownerId;
+    String friendsKey;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -139,6 +143,7 @@ public class FriendsFragment extends Fragment {
                         SuccessFriendRequest request = next.getValue(SuccessFriendRequest.class);
                         final String friendId = request.getFriendId();
                         final String roomId = request.getRoomId();
+                        friendsKey = friendId;
                         FirebaseDatabase.getInstance().getReference().child("users").child(friendId)
                                 .addValueEventListener(new ValueEventListener() {
                                     @Override
@@ -247,6 +252,7 @@ public class FriendsFragment extends Fragment {
                 Bitmap bitmap = getImage(databaseHelper.getProfilePic(id));
                 FriendListItem item = new FriendListItem(fullName,id,bitmap);
                 item.setRoomId(roomId);
+                friendsKey = id;
                 friendListItems.add(item);
                 friendCursor.moveToNext();
             }
@@ -258,9 +264,57 @@ public class FriendsFragment extends Fragment {
             friendListAdapter.notifyDataSetChanged();
             Collections.sort(friendListItems,new NameComparator());
             listView.setAdapter(friendListAdapter);
+            listenToNewFriends();
         }
     }
+    private void listenToNewFriends(){
+        reference= FirebaseDatabase.getInstance().getReference().child(RequestFriendListAdapter.FRIENDLIST).child(ownerId);
+        reference.startAt(friendsKey).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                friendListItems = new ArrayList<>();
+                friendListAdapter = new FriendListAdapter(getContext(),friendListItems);
+                listView.setAdapter(friendListAdapter);
+                new myTask().execute(getFriendQuery());
+//                final String friendId = request.getFriendId();
+//                final String roomId = request.getRoomId();
+//                FirebaseDatabase.getInstance().getReference().child("users").child(friendId)
+//                        .addValueEventListener(new ValueEventListener() {
+//                            @Override
+//                            public void onDataChange(DataSnapshot dataSnapshot) {
+//                                UserDetails userDetails = dataSnapshot.getValue(UserDetails.class);
+//                                executeQuery(userDetails, roomId);
+//                                downloadBitmap(userDetails);
+//                            }
+//
+//                            @Override
+//                            public void onCancelled(DatabaseError databaseError) {
+//
+//                            }
+//                        });
+            }
 
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
     public Bitmap getImage(byte[] data){
         return BitmapFactory.decodeByteArray(data,0,data.length);
     }

@@ -42,6 +42,11 @@ public class Message {
         this.contentType = contentType;
         this.date = new Date();
     }
+    public Message(String messageId,String content,int deliverType){
+        this.messageId = messageId;
+        this.content = content;
+        this.deliverType = deliverType;
+    }
     public Message(String content,int deliverType){
         this.content = content;
         this.deliverType = deliverType;

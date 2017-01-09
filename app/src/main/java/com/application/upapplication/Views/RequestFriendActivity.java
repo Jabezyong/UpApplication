@@ -42,6 +42,8 @@ public class RequestFriendActivity extends AppCompatActivity {
     List<FriendListItem> friendListItems;
     String ownerId;
     RequestFriendListAdapter adapter;
+    DatabaseReference friendReferece ;
+            ValueEventListener listener ;
     static int ONE_MEGABYTE = 1024*1024;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,8 +66,8 @@ public class RequestFriendActivity extends AppCompatActivity {
     }
     private void getFriendRequest(){
 
-        DatabaseReference friendReferece = FirebaseDatabase.getInstance().getReference().child(friendTree).child(ownerId);
-        friendReferece.addValueEventListener(new ValueEventListener() {
+        friendReferece =  FirebaseDatabase.getInstance().getReference().child(friendTree).child(ownerId);
+        listener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.getValue()!=null){
@@ -85,7 +87,8 @@ public class RequestFriendActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        };
+        friendReferece.addValueEventListener(listener);
     }
 
     private void addIntoList(final DataSnapshot data) {
@@ -126,6 +129,7 @@ public class RequestFriendActivity extends AppCompatActivity {
                         requestFriendList.setAdapter(adapter);
                         totalCount = 0;
                         currentCount = 0;
+                        friendReferece.removeEventListener(listener);
 
                     }
 //                }

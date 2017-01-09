@@ -39,7 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class ChatActivity extends AppCompatActivity implements ChildEventListener{
+public class ChatActivity extends AppCompatActivity implements ChildEventListener,ValueEventListener{
     public static String BUNDLE = "com.application.upapplication.BUNDLE";
     public static String CHATROOM = "CHATROOM";
     public static String CHATROOMID =  "CHATROOMID";
@@ -108,9 +108,15 @@ public class ChatActivity extends AppCompatActivity implements ChildEventListene
             } else {
                 msg.setDeliverType(Message.TYPE_RECEIVED);
             }
+            for(int i=0;i<msgList.size();i++){
+                if(msgList.get(i).getMessageId().equals(msg.getMessageId())){
+                    return;
+                }
+            }
             msgList.add(msg);
             adapter.notifyDataSetChanged();
             saveInDatabase(msg);
+
         }
     }
 //    private void append_chat_conversation(DataSnapshot dataSnapshot) {
@@ -255,6 +261,11 @@ public class ChatActivity extends AppCompatActivity implements ChildEventListene
     }
 
     @Override
+    public void onDataChange(DataSnapshot dataSnapshot) {
+        append_chat_conversation(dataSnapshot);
+    }
+
+    @Override
     public void onCancelled(DatabaseError databaseError) {
 
     }
@@ -285,9 +296,9 @@ public class ChatActivity extends AppCompatActivity implements ChildEventListene
                     Date timeStamp = new Date(cursor.getInt(cursor.getColumnIndexOrThrow(UpDatabaseHelper.CONTENT_COLUMN)));
 
                     if(!senderId.equals(ownerId)){
-                        msg = new Message(content,Message.TYPE_RECEIVED);
+                        msg = new Message(msgid,content,Message.TYPE_RECEIVED);
                     }else{
-                        msg = new Message(content,Message.TYPE_SEND);
+                        msg = new Message(msgid,content,Message.TYPE_SEND);
                     }
                     lastMsgKey = msgid;
                     msgList.add(msg);
@@ -303,7 +314,7 @@ public class ChatActivity extends AppCompatActivity implements ChildEventListene
             if(lastMsgKey == null){
                 messageReference.orderByKey().addChildEventListener(ChatActivity.this);
             }else {
-               messageReference.orderByKey().addChildEventListener(ChatActivity.this);
+               messageReference.orderByKey().startAt(lastMsgKey).addChildEventListener(ChatActivity.this);
             }
         }
     }
